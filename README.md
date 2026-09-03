@@ -64,6 +64,12 @@ Static, single file. GitHub Pages: Settings → Pages → Source `main` / root.
 
 ## Data provenance
 
-Zone geometry is derived from the map pack shipped with an EverQuest client. EverQuest is a
-trademark of Daybreak Game Company; this project is unaffiliated. Check the pack's terms
-before redistributing the derived data.
+Zone geometry is derived from **Brewall's EverQuest maps** (pack `brewall-20240109`) by
+Brewall Rainsinger, with a number of zones revised by Goodurden. The pack is distributed free
+for player use at [eqmaps.info](https://www.eqmaps.info/); this project embeds a simplified
+trace of it (up to 1200 line segments per zone) and credits it in the page footer. It carries
+no formal licence, so treat continued use as courtesy: keep the credit, and take it down if
+the author asks.
+
+EverQuest is a trademark of Daybreak Game Company. This project is unaffiliated with Daybreak
+or with the map authors.
