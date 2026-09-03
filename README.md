@@ -23,7 +23,7 @@ switched on or off, drawn on a schematic world map and on each zone's real map.
 
 | File | What it is |
 | --- | --- |
-| `index.html` | The whole site. Self-contained apart from Google Fonts — no build step, no server. |
+| `index.html` | The whole site: fonts, geometry and code embedded. No build step, no server, no third-party requests. |
 | `build_maps.py` | Regenerates the embedded zone geometry from a local EverQuest client. |
 
 `index.html` already contains the generated geometry, so the site works from a clone as-is.
@@ -61,6 +61,16 @@ server does differently and reload.
 ## Hosting
 
 Static, single file. GitHub Pages: Settings → Pages → Source `main` / root.
+
+## Privacy
+
+The page makes **no third-party requests**. Cinzel, Alegreya Sans and JetBrains Mono
+(SIL Open Font License 1.1, latin subsets) are embedded as base64 WOFF2 rather than
+hotlinked from Google Fonts, which is what a German court found to breach GDPR in
+LG München I, 3 O 17493/20 — the fonts are freely licensed, but the hotlink hands the
+visitor's IP address to a third party. There are no cookies, no analytics, no storage,
+and no user input leaves the browser. The host's own server logs (GitHub's, here) still
+record visitor IPs, as every web server does.
 
 ## Data provenance
 
