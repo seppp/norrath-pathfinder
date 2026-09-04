@@ -11,13 +11,48 @@ switched on or off, drawn on a schematic world map and on each zone's real map.
 - Toggles for **druid ports**, **wizard ports** and **boats**. A port is cast where you stand,
   so it is modelled as a one-way edge from *any* zone to any ring or spire destination —
   which is why enabling ports usually removes the walking before the port, not after it.
-- Dijkstra over the zone graph: a zone line and a port each cost 1 hop, a boat costs 2.
+- Dijkstra over the zone graph — see [How routing works](#how-routing-works).
 - **World map** with the route drawn across it — straight strokes for zone lines, dashes for
   boats, curved arcs for ports. Click a zone to set the destination, shift-click for the start.
 - **Itinerary** collapsing consecutive walks into one line, with the port destination and the
   spell that gets you there (Ring of Feerrott, Teleport: Combine, …) as the headline.
 - **Zone by zone** cards, one per zone entered, drawn from that zone's own client map file
   with pins on the real zone-line coordinates. Hover to magnify, click to pin, Esc to close.
+
+## How routing works
+
+Dijkstra over a graph rebuilt on every change — the toggles change the *graph*, not the search.
+
+```js
+const COST = {walk:1, boat:2, druid:1, wizard:1};
+```
+
+A zone line and a port each cost 1 hop; a boat costs 2, because you wait on the dock for it.
+The unequal weights are why this is Dijkstra and not a breadth-first search: BFS would offer
+you a two-boat crossing over a three-zone walk. With 87 zones the frontier is a linear scan
+rather than a heap. The search stops when the destination is the cheapest unfinalised zone,
+which is what makes the answer optimal rather than merely plausible.
+
+**Ties are common** — ports cost 1 from anywhere, so "port to ring A, walk twice" and
+"port to ring B, walk twice" score the same all over Norrath. Two strict `<` comparisons
+settle them:
+
+- the frontier scan takes the first zone of equal cost in `dist` insertion order;
+- relaxation (`d < dist[e.to]`) keeps the first equally-cheap predecessor and never
+  overwrites it with a later one.
+
+Insertion order follows how the graph is built — `EDGES` in declaration order, then druid
+port edges, then wizard. So the result is **deterministic** (same start, destination and
+toggles always produce the same route), and an exact druid/wizard tie resolves to **druid**,
+purely because those edges are added first. Nothing judged it better.
+
+"Shortest" therefore means *fewest weighted hops*, and among equally short routes you get an
+arbitrary-but-stable pick, not a considered one.
+
+**Not modelled:** how long a zone takes to cross (Kithicor and Ak'Anon both cost 1), run
+speed, boat schedules, danger, level, or faction. A ring in the Great Divide is as cheap as
+one in the Commonlands. Any of these could become a preference — weight zones by crossing
+time, penalise ports, avoid a named zone — by changing the cost table and the edge weights.
 
 ## Files
 

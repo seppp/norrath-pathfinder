@@ -518,6 +518,8 @@ const WIZARD = {
 const spellFor = (type,zone) =>
   type === "druid" ? DRUID[zone] : type === "wizard" ? WIZARD[zone] : null;
 
+/* A zone line and a port each cost one hop; a boat costs two, because you wait
+   on the dock for it. Unequal weights are why this is Dijkstra, not a BFS. */
 const COST = {walk:1, boat:2, druid:1, wizard:1};
 
 const $ = id => document.getElementById(id);
@@ -549,6 +551,10 @@ function buildGraph(opts){
   return g;
 }
 
+/* Dijkstra with a linear frontier scan — 87 zones does not need a heap.
+   Both comparisons below are strict, so among equal-cost routes the one found
+   first wins: deterministic, though the winner is arbitrary. Because druid
+   edges are added to the graph before wizard ones, an exact tie goes to druid. */
 function findPath(g,start,goal){
   if (start === goal) return [];
   const dist = {}, prev = {}, seen = {};
