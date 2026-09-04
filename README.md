@@ -49,8 +49,11 @@ purely because those edges are added first. Nothing judged it better.
 "Shortest" therefore means *fewest weighted hops*, and among equally short routes you get an
 arbitrary-but-stable pick, not a considered one.
 
-**Not modelled:** how long a zone takes to cross (Kithicor and Ak'Anon both cost 1), run
-speed, boat schedules, danger, level, or faction. A ring in the Great Divide is as cheap as
+**Not modelled:** how long a zone takes to cross. Every zone line costs the same, so Ak'Anon
+and the Eastern Wastes are both one hop, and a route may enter a zone at one corner and leave
+by the far one — zone size, terrain, run speed and the distance between the two zone lines
+carry no weight. Fewest zone lines is not always quickest on foot. Nor are boat schedules,
+danger, level, or faction. A ring in the Great Divide is as cheap as
 one in the Commonlands. Any of these could become a preference — weight zones by crossing
 time, penalise ports, avoid a named zone — by changing the cost table and the edge weights.
 

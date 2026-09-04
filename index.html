@@ -314,7 +314,7 @@
       <section class="panel" id="zonePanel">
         <div class="route-head">
           <h2 class="route-title">Zone by zone</h2>
-          <span class="head-note">Drawn from the client map files, in the same orientation your in-game map uses</span>
+          <span class="head-note">Client map files, in your in-game map's orientation &mdash; the gold line is direct, not a walkable path</span>
         </div>
         <div id="zoneCards" class="zone-grid"></div>
       </section>
@@ -333,11 +333,15 @@
   <div class="notes">
     <div>
       <span class="eyebrow">How it scores</span>
-      <p>Each zone line and each port counts as one hop; a boat counts as two, since you wait for it. A port is cast where you stand, so it skips everything between you and its destination &mdash; switching ports off shows you the walk instead.</p>
+      <p>Each zone line and each port counts as one hop; a boat counts as two, since you wait for it. A port is cast where you stand, so it skips everything between you and its destination &mdash; switching ports off shows you the walk instead. Where several routes tie &mdash; with ports, they often do &mdash; the page picks one and stays with it, so the same choices always give you the same route.</p>
     </div>
     <div>
       <span class="eyebrow">About the map</span>
       <p>The world map is schematic: continents sit in their rough relative positions and each dot is a zone. The zone cards are not &mdash; each is traced from that zone's own Brewall map file, and the pins sit on the real zone-line coordinates. Zones are drawn in the orientation the in-game map uses, so a card should match what you see on screen. A pin marked <em>approx.</em> is one the map file did not label, placed instead by bearing from the world map.</p>
+    </div>
+    <div>
+      <span class="eyebrow">Hops, not minutes</span>
+      <p>Every zone line costs the same, whatever lies between them. Ak'Anon and the Eastern Wastes are each one hop, though one is a stroll and the other a long run &mdash; and a route may enter a zone at one corner and leave by the far one. Zone size, terrain, run speed and the distance between the two zone lines carry no weight here, so the fewest zone lines is not always the quickest on foot.</p>
     </div>
     <div>
       <span class="eyebrow">Privacy</span>
