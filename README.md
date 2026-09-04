@@ -3,7 +3,7 @@
 Shortest travel route between any two EverQuest zones, with druid and wizard ports
 switched on or off, drawn on a schematic world map and on each zone's real map.
 
-**Live:** [https://&lt;user&gt;.github.io/norrath-pathfinder/](https://seppp.github.io/norrath-pathfinder/)
+**Live:** https://seppp.github.io/norrath-pathfinder
 
 ## What it does
 
