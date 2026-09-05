@@ -137,6 +137,17 @@
   .seg.stop .stopnote{color:var(--ink-soft);font-size:13.5px;margin-top:2px}
   .seg.stop .stopnote b{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;
     text-transform:uppercase;color:var(--gold);margin-right:6px;font-weight:600}
+  .grouplabel{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink-faint);padding:8px 0 2px}
+  .stoprow .ord{width:14px;flex:none;font-family:"JetBrains Mono",monospace;font-size:10px;
+    color:var(--gold);font-weight:600;text-align:right}
+  .stoprow .pin{background:none;border:0;cursor:pointer;color:var(--ink-faint);font-size:11px;
+    padding:2px 3px;margin-left:auto;line-height:1}
+  .stoprow .pin.on{color:var(--gold)}
+  .stoprow .pin:hover{color:var(--ink)}
+  .stoprow .drop{margin-left:0}
+  .seg.stop.fixed{border-left-color:var(--wiz)}
+  .seg.stop.fixed .kind{color:var(--wiz)}
   .stoprow .slabel{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.1em;
     text-transform:uppercase;color:var(--ink-faint);margin-left:7px}
   .zmini .poi{fill:var(--gold);stroke:var(--surface);stroke-width:1.4px;vector-effect:non-scaling-stroke}
@@ -319,7 +330,7 @@
             <span><span class="t-name">Return to the start</span>
             <span class="t-note">For a turn-in back where you began.</span></span>
           </label>
-          <p class="hint quest-hint">Stops are visited in whatever order is shortest, not the order you add them.</p>
+          <p class="hint quest-hint">Stops are visited in whatever order is shortest. Lock one with &#128274; and it keeps its place in the list &mdash; for a quest that wants its turn-ins in sequence.</p>
         </div>
 
         <div class="preset">
@@ -424,7 +435,7 @@
   <div class="notes">
     <div>
       <span class="eyebrow">Several stops at once</span>
-      <p>A stop can carry the spot you are actually going to. Load the Coin of Tash quest and each of the ten cities is marked with the coin's own /loc, drawn on that zone's map with the hint beside it &mdash; a wiki /loc is written (Y, X) and the map files hold its negation, checked against two quest NPCs that appear in both. Add stops and the route visits them in whatever order is shortest, not the order you added them &mdash; solved exactly up to twelve stops, and closely above that. It is worth most when you are walking: the ten coins of the Coin of Tash quest take 120 zone lines in the order the guides list them and 66 in the best order, but with a druid and a wizard porting you the same errand is 30 against 29, because a port makes everywhere roughly equidistant.</p>
+      <p>A stop can carry the spot you are actually going to. Load the Coin of Tash quest and each of the ten cities is marked with the coin's own /loc, drawn on that zone's map with the hint beside it &mdash; a wiki /loc is written (Y, X) and the map files hold its negation, checked against two quest NPCs that appear in both. Add stops and the route visits them in whatever order is shortest, not the order you added them &mdash; solved exactly up to twelve stops, and closely above that. A stop can be locked into its place instead, for a quest whose turn-ins have to happen in sequence; the free stops then finish wherever suits starting that chain. It is worth most when you are walking: the ten coins of the Coin of Tash quest take 120 zone lines in the order the guides list them and 66 in the best order, but with a druid and a wizard porting you the same errand is 30 against 29, because a port makes everywhere roughly equidistant.</p>
     </div>
     <div>
       <span class="eyebrow">How it scores</span>
@@ -764,7 +775,7 @@ function findPath(g,start,goal){
    twelve stops this is solved exactly (Held-Karp over subsets);
    beyond that, nearest-neighbour with 2-opt, which is close enough
    and never noticeably slow. */
-function orderStops(g, start, stops, loop){
+function orderStops(g, start, stops, endAt){
   const nodes = [start].concat(stops);
   const table = nodes.map(n => dijkstra(g, n));
   const cost = (i,j) => {
@@ -774,10 +785,14 @@ function orderStops(g, start, stops, loop){
   const m = stops.length;
   if (!m) return {order:[], cost:0};
 
+  const tail = endAt ? table.map((t,i) => {
+    const d = table[i].dist[endAt];
+    return d === undefined ? Infinity : d;
+  }) : null;
   const finish = (order) => {
     let c = 0, at = 0;
     for (const j of order){ c += cost(at, j); at = j; }
-    if (loop) c += cost(at, 0);
+    if (tail) c += tail[at];
     return c;
   };
 
@@ -799,7 +814,7 @@ function orderStops(g, start, stops, loop){
     }
     let bestEnd = -1, best = Infinity;
     for (let j = 0; j < m; j++){
-      const c = dp[full*m + j] + (loop ? cost(j+1, 0) : 0);
+      const c = dp[full*m + j] + (tail ? tail[j+1] : 0);
       if (c < best){ best = c; bestEnd = j; }
     }
     if (bestEnd < 0) return {order:stops.map((_,i) => i+1), cost:Infinity};
@@ -831,19 +846,26 @@ function orderStops(g, start, stops, loop){
   return {order, cost:finish(order)};
 }
 
-/* The whole journey as one list of legs, plus where each stop falls. */
-function journey(g, start, stops, loop){
-  const {order} = orderStops(g, start, stops, loop);
-  const seq = order.map(i => stops[i-1]);
-  if (loop && stops.length) seq.push(start);
+/* The whole journey as one list of legs, plus where each stop falls.
+   Free stops are reordered; a chain is walked as given, because a quest
+   that wants the coin enchanted three times wants it in that order. The
+   free stops finish wherever is cheapest for starting the chain. */
+function journey(g, start, free, chain, loop){
+  const endAt = chain.length ? chain[0] : (loop ? start : null);
+  const {order} = orderStops(g, start, free, endAt);
+  const seq = order.map(i => ({zone:free[i-1], fixed:false}))
+                   .concat(chain.map(z => ({zone:z, fixed:true})));
+  if (loop && seq.length && seq[seq.length-1].zone !== start)
+    seq.push({zone:start, fixed:true});
+
   const legs = [], marks = [];
   let at = start;
-  for (const target of seq){
-    const part = findPath(g, at, target);
-    if (part === null) return {legs:null, blocked:target};
+  for (const step of seq){
+    const part = findPath(g, at, step.zone);
+    if (part === null) return {legs:null, blocked:step.zone};
     legs.push(...part);
-    marks.push({zone:target, index:legs.length});
-    at = target;
+    marks.push({zone:step.zone, index:legs.length, fixed:step.fixed});
+    at = step.zone;
   }
   return {legs, marks, seq};
 }
@@ -1220,14 +1242,17 @@ function syncEras(){
 function render(){
   syncEras();
   const from = STATE.from;
-  const stops = STATE.stops.filter(s => s.on).map(s => s.zone).filter(eraOn);
-  const single = stops.length === 0;
-  const targets = single ? [STATE.to] : stops;
+  const live = STATE.stops.filter(s => s.on && eraOn(s.zone));
+  const free = live.filter(s => !s.seq).map(s => s.zone);
+  const chain = live.filter(s => s.seq).map(s => s.zone);
+  const single = live.length === 0;
+  const targets = single ? [STATE.to] : free.concat(chain);
   const loop = $("loop").checked && !single;
 
   const opts = {dru:$("dru").checked, wiz:$("wiz").checked, boats:$("boats").checked};
   const g = buildGraph(opts);
-  const trip = journey(g, from, targets, loop);
+  const trip = single ? journey(g, from, [], [STATE.to], false)
+                      : journey(g, from, free, chain, loop);
   const legs = trip.legs;
   const body = $("routeBody");
 
@@ -1268,12 +1293,15 @@ function render(){
     const isLast = i === marks.length - 1;
     rows.push(...segs.map((sg,j) => segHTML(sg, isLast && j === segs.length-1)));
     if (!isLast || marks.length > 1){
-      const total = marks.length - (loop ? 1 : 0);
+      const freeCount = marks.filter(m => !m.fixed).length;
+      const chainMarks = marks.filter(m => m.fixed);
       const label = marks.length === 1 ? "Arrive"
-                  : (loop && isLast) ? "Back where you started"
-                  : "Stop " + (i+1) + " of " + total;
+                  : (loop && isLast && mark.zone === from) ? "Back where you started"
+                  : mark.fixed
+                    ? "In order &middot; " + (chainMarks.indexOf(mark)+1) + " of " + chainMarks.length
+                    : "Stop " + (i+1) + " of " + freeCount;
       const info = STATE.stops.find(x => x.zone === mark.zone && x.note);
-      rows.push('<li class="seg stop"><div class="kind">' + label + '</div>' +
+      rows.push('<li class="seg stop' + (mark.fixed ? " fixed" : "") + '"><div class="kind">' + label + '</div>' +
         '<div class="zone">' + name(mark.zone) + '</div>' +
         (info ? '<div class="stopnote"><b>' + info.label + '</b> ' + info.note + '</div>' : "") +
         '</li>');
@@ -1292,22 +1320,39 @@ function renderStops(){
   STATE.stops = list;
   $("stopsBox").hidden = !list.length;
   $("stopCount").textContent = list.length ? "· " + list.filter(s => s.on).length + " of " + list.length : "";
-  $("stopList").innerHTML = list.map((s,i) =>
-    '<li class="stoprow' + (s.on ? "" : " off") + '">' +
+
+  const row = (s, i, n) =>
+    '<li class="stoprow' + (s.on ? "" : " off") + (s.seq ? " fixed" : "") + '">' +
+    (n ? '<span class="ord">' + n + '</span>' : '') +
     '<input type="checkbox" data-stop="' + i + '"' + (s.on ? " checked" : "") +
     ' aria-label="Visit ' + name(s.zone) + '">' +
     '<span class="sname">' + name(s.zone) +
     (s.label ? '<span class="slabel">' + s.label + '</span>' : "") + '</span>' +
+    '<button class="pin' + (s.seq ? " on" : "") + '" data-seq="' + i + '" type="button" ' +
+    'title="' + (s.seq ? "Let this stop be reordered" : "Keep this stop in order") + '" ' +
+    'aria-label="' + (s.seq ? "Let " : "Keep ") + name(s.zone) + ' in order">' +
+    (s.seq ? "&#128274;" : "&#8645;") + '</button>' +
     '<button class="drop" data-drop="' + i + '" type="button" ' +
-    'aria-label="Remove ' + name(s.zone) + '">&times;</button></li>').join("");
+    'aria-label="Remove ' + name(s.zone) + '">&times;</button></li>';
 
-  for (const box of $("stopList").querySelectorAll("input[data-stop]"))
-    box.addEventListener("change", () => {
-      STATE.stops[+box.dataset.stop].on = box.checked; render();
-    });
-  for (const btn of $("stopList").querySelectorAll("button[data-drop]"))
-    btn.addEventListener("click", () => {
-      STATE.stops.splice(+btn.dataset.drop, 1); render();
+  const free = list.map((s,i) => [s,i]).filter(([s]) => !s.seq);
+  const fixed = list.map((s,i) => [s,i]).filter(([s]) => s.seq);
+  $("stopList").innerHTML =
+    (free.length ? '<li class="grouplabel">Any order</li>' + free.map(([s,i]) => row(s,i)).join("") : "") +
+    (fixed.length ? '<li class="grouplabel">In this order</li>' +
+       fixed.map(([s,i],k) => row(s,i,k+1)).join("") : "");
+
+  const box = $("stopList");
+  for (const el of box.querySelectorAll("input[data-stop]"))
+    el.addEventListener("change", () => { STATE.stops[+el.dataset.stop].on = el.checked; render(); });
+  for (const el of box.querySelectorAll("button[data-drop]"))
+    el.addEventListener("click", () => { STATE.stops.splice(+el.dataset.drop, 1); render(); });
+  for (const el of box.querySelectorAll("button[data-seq]"))
+    el.addEventListener("click", () => {
+      const s = STATE.stops[+el.dataset.seq];
+      s.seq = !s.seq;
+      if (s.seq){ STATE.stops.splice(STATE.stops.indexOf(s), 1); STATE.stops.push(s); }
+      render();
     });
 }
 
@@ -1419,8 +1464,14 @@ $("questTash").addEventListener("click", () => {
     {zone:"neriakb",       label:"Heda", loc:[0,-795],    note:"off the big bridge to the left, in the water by the glass windows"},
     {zone:"oggok",         label:"Izah", loc:[103,108],   note:"in the lake by the warrior guild, north end"},
     {zone:"qeynos_n",      label:"Jaka", loc:[-90,-445],  note:"under the Temple of Life, in the Koalindl Fish Pool"}
-  ].map(c => Object.assign({on:true}, c));
-  $("loop").checked = true;
+  ].map(c => Object.assign({on:true, seq:false}, c)).concat([
+    /* Then the coin is enchanted three times, in this order, and handed back. */
+    {zone:"highkeep", label:"Tarn Visilin",  loc:[75,-220],    note:"in the library — hand over the Coin of Tash"},
+    {zone:"neriakc",  label:"Mizr N`Mar",    loc:[915,-1315],  note:"in the Third Gate library — the second enchantment"},
+    {zone:"erudin",   label:"Raine Beteria", loc:[-1050,-212], note:"in the library — the final enchantment"},
+    {zone:"soltemple",label:"Romar Sunto",   loc:[393,90],     note:"hand it back for Spell: Tashania"}
+  ].map(c => Object.assign({on:true, seq:true}, c)));
+  $("loop").checked = false;
   render();
 });
 
