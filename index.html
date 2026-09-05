@@ -147,10 +147,10 @@
     text-transform:uppercase;color:var(--ink-faint);padding:8px 0 2px}
   .stoprow .ord{width:14px;flex:none;font-family:"JetBrains Mono",monospace;font-size:10px;
     color:var(--gold);font-weight:600;text-align:right}
-  .stoprow .pin{background:none;border:0;cursor:pointer;color:var(--ink-faint);font-size:11px;
-    padding:2px 3px;margin-left:auto;line-height:1}
-  .stoprow .pin.on{color:var(--gold)}
-  .stoprow .pin:hover{color:var(--ink)}
+  .stoprow .pin{background:none;border:0;cursor:pointer;font-size:11px;
+    padding:2px 3px;margin-left:auto;line-height:1;opacity:.32;filter:grayscale(1)}
+  .stoprow .pin.on{opacity:1;filter:none}
+  .stoprow:hover .pin,.stoprow .pin:focus-visible{opacity:1}
   .stoprow .drop{margin-left:0}
   .seg.stop.fixed{border-left-color:var(--wiz)}
   .seg.stop.fixed .kind{color:var(--wiz)}
@@ -339,7 +339,7 @@
             <span><span class="t-name">Return to the start</span>
             <span class="t-note">For a turn-in back where you began.</span></span>
           </label>
-          <p class="hint quest-hint">Stops are visited in whatever order is shortest. Lock one with &#128274; and it keeps its place in the list &mdash; for a quest that wants its turn-ins in sequence.</p>
+          <p class="hint quest-hint">Stops are visited in whatever order is shortest. Shut a stop's padlock and it keeps its place in the list instead &mdash; for a quest that wants its turn-ins in sequence.</p>
         </div>
 
 
@@ -1338,10 +1338,14 @@ function renderStops(){
     ' aria-label="Visit ' + name(s.zone) + '">' +
     '<span class="sname">' + name(s.zone) +
     (s.label ? '<span class="slabel">' + s.label + '</span>' : "") + '</span>' +
+    /* Both states are padlocks, open or shut: the button says what the
+       stop is, not what the click would do. */
     '<button class="pin' + (s.seq ? " on" : "") + '" data-seq="' + i + '" type="button" ' +
-    'title="' + (s.seq ? "Let this stop be reordered" : "Keep this stop in order") + '" ' +
-    'aria-label="' + (s.seq ? "Let " : "Keep ") + name(s.zone) + ' in order">' +
-    (s.seq ? "&#128274;" : "&#8645;") + '</button>' +
+    'aria-pressed="' + (s.seq ? "true" : "false") + '" ' +
+    'title="' + (s.seq ? "Locked in place — click to let it be reordered"
+                       : "Free to reorder — click to lock it in place") + '" ' +
+    'aria-label="' + name(s.zone) + (s.seq ? ", locked in place" : ", free to reorder") + '">' +
+    (s.seq ? "&#128274;" : "&#128275;") + '</button>' +
     '<button class="drop" data-drop="' + i + '" type="button" ' +
     'aria-label="Remove ' + name(s.zone) + '">&times;</button></li>';
 
