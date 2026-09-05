@@ -1305,7 +1305,8 @@ function render(){
                   : mark.fixed
                     ? "In order &middot; " + (chainMarks.indexOf(mark)+1) + " of " + chainMarks.length
                     : "Stop " + (i+1) + " of " + freeCount;
-      const info = STATE.stops.find(x => x.zone === mark.zone && x.note);
+      const homeAgain = loop && isLast && mark.zone === from;
+      const info = homeAgain ? null : STATE.stops.find(x => x.zone === mark.zone && x.note);
       rows.push('<li class="seg stop' + (mark.fixed ? " fixed" : "") + '"><div class="kind">' + label + '</div>' +
         '<div class="zone">' + name(mark.zone) + '</div>' +
         (info ? '<div class="stopnote"><b>' + info.label + '</b> ' + info.note + '</div>' : "") +
@@ -1480,6 +1481,25 @@ const QUESTS = {
       {zone:"erudin",    label:"Raine Beteria", loc:[-1050,-212], note:"in the library — the final enchantment"},
       {zone:"soltemple", label:"Romar Sunto",   loc:[393,90],     note:"hand it back for Spell: Tashania"}
     ]
+  },
+
+  wheel: {
+    name: "Tarton's Wheel (Ice Comet)",
+    start: "everfrost",
+    loop: true,          // the ten rods go back to Sulgar, where you began
+    free: [
+      {zone:"erudsxing", label:"Azia", loc:[-1159,2329], note:"underwater past the shipwreck, just after the ledge — sharks see invis"},
+      {zone:"everfrost", label:"Beza", loc:[5000,-5100], note:"in the house in the hidden cave, north-east of the caves through the frozen river"},
+      {zone:"lakerathe", label:"Caza", loc:[2782,142],   note:"top floor of the stone tower in the hidden cave, entrance at 2826, -907"},
+      {zone:"cauldron",  label:"Dena", loc:[-890,-740],  note:"in a gully on the lake floor left of Kedge Keep, out from Unrest"},
+      {zone:"gukbottom", label:"Ena",  loc:[1145,-690],  note:"on the floor of the reanimated hand room — bring a group"},
+      {zone:"oasis",     label:"Fana", loc:[-790,-60],   note:"top floor of the stone tower in the lake, underwater"},
+      {zone:"highpass",  label:"Geza", loc:[-207,433],   note:"beneath the waterfall by the Tiger's Roar patio"},
+      {zone:"qcat",      label:"Heda", loc:[670,60],     note:"underwater on the tile floor of the shark pit"},
+      {zone:"neriakb",   label:"Izah", loc:[0.89,-803.9],note:"on the river floor outside the Blind Fish windows"},
+      {zone:"unrest",    label:"Jaka", loc:[520,-285],   note:"the hidden cavern floor right of the manor, in a cubby"}
+    ],
+    chain: []
   }
 };
 
@@ -1495,7 +1515,7 @@ $("questPick").addEventListener("change", ev => {
   setZone("from", q.start);
   STATE.stops = q.free.map(c => Object.assign({on:true, seq:false}, c))
              .concat(q.chain.map(c => Object.assign({on:true, seq:true}, c)));
-  $("loop").checked = false;
+  $("loop").checked = !!q.loop;
   render();
 });
 
