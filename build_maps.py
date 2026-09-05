@@ -52,6 +52,7 @@ FILES = {
  "citymist":["citymist"], "charasis":["charasis"], "veeshan":["veeshan"],
  "crystal":["crystal"], "velketor":["velketor"], "templeveeshan":["templeveeshan"],
  "necropolis":["necropolis"], "sleeper":["sleeper"], "icewell":["thurgadinb"],
+ "stonebrunt":["stonebrunt"],
 }
 
 # zone id -> the display name, for matching "to_..." labels
@@ -96,6 +97,7 @@ NAMES = {
  "crystal":"Crystal Caverns","velketor":"Velketor's Labyrinth",
  "templeveeshan":"Temple of Veeshan","necropolis":"Dragon Necropolis",
  "sleeper":"Sleeper's Tomb","icewell":"Icewell Keep",
+ "stonebrunt":"Stonebrunt Mountains",
 }
 
 # extra spellings the map labels use
@@ -211,6 +213,7 @@ ALIASES = {
  "necropolis":["dragon necropolis","the dragon necropolis"],
  "sleeper":["sleeper s tomb","the sleeper s tomb","sleepers tomb"],
  "icewell":["icewell keep","the icewell keep"],
+ "stonebrunt":["stonebrunt mountains","stonebrunt","the stonebrunt mountains"],
 }
 
 def norm(s):

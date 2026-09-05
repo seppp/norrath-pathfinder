@@ -7,12 +7,12 @@ switched on or off, drawn on a schematic world map and on each zone's real map.
 
 ## What it does
 
-- Type-to-search pickers for the start and destination zone (114 zones — outdoor zones, city
+- Type-to-search pickers for the start and destination zone (115 zones — outdoor zones, city
   districts and the dungeons hanging off them).
 - **Expansion toggles.** Classic is always on; Ruins of Kunark and Scars of Velious can each be
   switched off, which removes those zones from the map, the pickers and the search — a server
-  running classic only cannot route through Kunark. Defaults to classic alone (71 zones);
-  all three gives 114. A zone's expansion follows its continent, since everything on Kunark
+  running classic only cannot route through Kunark. Defaults to classic alone (72 zones);
+  all three gives 115. A zone's expansion follows its continent, since everything on Kunark
   and Velious arrived with its own expansion. Selecting a zone and then switching its
   expansion off moves the selection to one that still exists.
 - Toggles for **druid ports**, **wizard ports** and **boats**. A port is cast where you stand,
@@ -99,6 +99,13 @@ Four tables at the top of the script in `index.html`, one line per entry:
 - `ZONES` — `id: [name, region, worldX, worldY]` (world coordinates are the schematic map only)
 - `EDGES` — `[a, b]` for a zone line, `[a, b, "boat"]` for a ship
 - `DRUID` / `WIZARD` — `zone: "Spell Name"` for each port destination
+
+Port destinations follow **EverQuest Legends'** spell lists, not live EQ's — they differ.
+Legends druids get South Ro and Stonebrunt, which live classic does not; Legends wizards get
+Nektulos, West Karana, Stonebrunt, Greater Faydark and Cazic, and use `<Zone> Gate/Portal/
+Translocate` naming rather than `Teleport:`. Sources: [EQLForge druid](https://eqlforge.com/spells/druid),
+[EQLForge wizard](https://eqlforge.com/spells/wizard), [EQProgression](https://www.eqprogression.com/legends/druid-portal-spells/),
+cross-checked against the `Druid_Ring` and `Wizard_Spires` markers in the map pack.
 
 The graph is a reconstruction of classic/Kunark/Velious connectivity; correct anything your
 server does differently and reload.
