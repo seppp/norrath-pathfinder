@@ -104,6 +104,9 @@
   .toggle .t-name{font-weight:700;display:flex;align-items:center;gap:7px}
   .dot{width:9px;height:9px;border-radius:50%;flex:none}
   .toggle .t-note{display:block;color:var(--ink-faint);font-size:13.5px;line-height:1.35}
+  .toggle input:disabled{opacity:.55}
+  .toggle input:disabled + span .t-name{color:var(--ink-soft)}
+  #zoneCount{font-family:"JetBrains Mono",monospace;letter-spacing:.06em;text-transform:none}
   .hint{font-size:13.5px;color:var(--ink-faint);border-top:1px solid var(--rule);padding-top:12px;margin:0}
   .hint b{color:var(--ink-soft)}
 
@@ -262,6 +265,31 @@
         </label>
 
         <div class="toggles">
+          <span class="eyebrow" style="padding-top:12px">Expansions <span id="zoneCount"></span></span>
+          <label class="toggle">
+            <input type="checkbox" checked disabled>
+            <span>
+              <span class="t-name">Classic</span>
+              <span class="t-note">Antonica, Faydwer, Odus and the seas between them.</span>
+            </span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="kunark">
+            <span>
+              <span class="t-name">Ruins of Kunark</span>
+              <span class="t-note">Cabilis, the Dreadlands, Sebilis and the rest of the continent.</span>
+            </span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="velious">
+            <span>
+              <span class="t-name">Scars of Velious</span>
+              <span class="t-note">Iceclad, Thurgadin, the Wastes and the dragons beyond.</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="toggles">
           <span class="eyebrow" style="padding-top:12px">Travel allowed</span>
           <label class="toggle">
             <input type="checkbox" id="dru" checked>
@@ -337,7 +365,7 @@
     </div>
     <div>
       <span class="eyebrow">About the map</span>
-      <p>The world map is schematic: continents sit in their rough relative positions and each dot is a zone. The zone cards are not &mdash; each is traced from that zone's own Brewall map file, and the pins sit on the real zone-line coordinates. Zones are drawn in the orientation the in-game map uses, so a card should match what you see on screen. A pin marked <em>approx.</em> is one the map file did not label, placed instead by bearing from the world map.</p>
+      <p>Expansions can be switched off &mdash; a server running classic only has no Kunark or Velious to route through, so those zones leave the map, the pickers and the search entirely. The world map is schematic: continents sit in their rough relative positions and each dot is a zone. The zone cards are not &mdash; each is traced from that zone's own Brewall map file, and the pins sit on the real zone-line coordinates. Zones are drawn in the orientation the in-game map uses, so a card should match what you see on screen. A pin marked <em>approx.</em> is one the map file did not label, placed instead by bearing from the world map.</p>
     </div>
     <div>
       <span class="eyebrow">Hops, not minutes</span>
@@ -563,6 +591,13 @@ const spellFor = (type,zone) =>
 
 /* A zone line and a port each cost one hop; a boat costs two, because you wait
    on the dock for it. Unequal weights are why this is Dijkstra, not a BFS. */
+/* A zone's expansion is its continent: everything on Kunark shipped with
+   Ruins of Kunark, everything on Velious with Scars of Velious, and the rest
+   was there at launch. Servers running classic only see the classic graph. */
+const ERA_OF = {Kunark:"kunark", Velious:"velious"};
+const eraOf = z => ERA_OF[region(z)] || "classic";
+const eraOn = z => { const e = eraOf(z); return e === "classic" || $(e).checked; };
+
 const COST = {walk:1, boat:2, druid:1, wizard:1};
 
 const $ = id => document.getElementById(id);
@@ -580,14 +615,17 @@ function buildGraph(opts){
   for (const [a,b,type] of EDGES){
     const t = type || "walk";
     if (t === "boat" && !opts.boats) continue;
+    if (!eraOn(a) || !eraOn(b)) continue;
     both(a,b,t);
   }
 
   /* A port is cast where you stand, so it runs one way from any zone
      to any destination the class can reach. */
   const ports = (list,type) => {
-    for (const dest in list)
-      for (const from in ZONES) if (from !== dest) link(from,dest,type);
+    for (const dest in list){
+      if (!eraOn(dest)) continue;
+      for (const from in ZONES) if (from !== dest && eraOn(from)) link(from,dest,type);
+    }
   };
   if (opts.dru) ports(DRUID,"druid");
   if (opts.wiz) ports(WIZARD,"wizard");
@@ -634,12 +672,14 @@ function drawBaseMap(){
   svg.textContent = "";
 
   for (const L of LANDS){
+    if (!Object.keys(ZONES).some(z => region(z) === L.label && eraOn(z))) continue;
     el("rect",{class:"landmass",x:L.x,y:L.y,width:L.w,height:L.h,rx:L.r},svg);
     const t = el("text",{class:"continent-label",x:L.x+16,y:L.y+24},svg);
     t.textContent = L.label;
   }
 
   for (const [a,b,type] of EDGES){
+    if (!eraOn(a) || !eraOn(b)) continue;
     const p = pos(a), q = pos(b);
     el("line",{class:"base-edge" + (type === "boat" ? " boat" : ""),
                x1:p.x,y1:p.y,x2:q.x,y2:q.y},svg);
@@ -648,6 +688,7 @@ function drawBaseMap(){
   routeLayer = el("g",{},svg);
 
   for (const id in ZONES){
+    if (!eraOn(id)) continue;
     const p = pos(id);
     const g = el("g",{class:"node",tabindex:"0",role:"button",
                       "aria-label":name(id) + " — click to set destination"},svg);
@@ -918,7 +959,31 @@ function renderZoneCards(legs, to){
 }
 
 /* ── Main ─────────────────────────────────────────────────── */
+/* Switching an expansion off can remove the zone you had selected, and
+   redraws the world map, so both are settled before the search runs. */
+let lastEras = null;
+
+function keepSelectionValid(){
+  const fallback = (avoid) => ALL_ZONES.find(z => eraOn(z) && z !== avoid);
+  for (const field of ["from","to"]){
+    if (eraOn(STATE[field])) continue;
+    STATE[field] = fallback(STATE[field === "from" ? "to" : "from"]);
+    $(field + "Input").value = name(STATE[field]);
+  }
+}
+
+function syncEras(){
+  const key = ($("kunark").checked ? "K" : "") + ($("velious").checked ? "V" : "");
+  const n = ALL_ZONES.filter(eraOn).length;
+  $("zoneCount").textContent = "· " + n + " zones";
+  if (key === lastEras) return;
+  lastEras = key;
+  keepSelectionValid();
+  drawBaseMap();
+}
+
 function render(){
+  syncEras();
   const from = STATE.from, to = STATE.to;
   const opts = {dru:$("dru").checked, wiz:$("wiz").checked, boats:$("boats").checked};
   const legs = findPath(buildGraph(opts), from, to);
@@ -966,7 +1031,7 @@ function setZone(field, id){
 
 function matches(query){
   const q = query.trim().toLowerCase();
-  const scored = ALL_ZONES.map(id => {
+  const scored = ALL_ZONES.filter(eraOn).map(id => {
     const hay = (name(id) + " " + region(id)).toLowerCase();
     if (!q) return {id, rank:2};
     if (name(id).toLowerCase().startsWith(q)) return {id, rank:0};
@@ -1038,10 +1103,9 @@ function combobox(field){
   input.value = name(STATE[field]);
 }
 
-drawBaseMap();
 combobox("from");
 combobox("to");
-["dru","wiz","boats"].forEach(id => $(id).addEventListener("change", render));
+["dru","wiz","boats","kunark","velious"].forEach(id => $(id).addEventListener("change", render));
 $("swap").addEventListener("click", () => {
   const a = STATE.from; STATE.from = STATE.to; STATE.to = a;
   $("fromInput").value = name(STATE.from); $("toInput").value = name(STATE.to);

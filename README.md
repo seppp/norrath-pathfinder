@@ -7,8 +7,14 @@ switched on or off, drawn on a schematic world map and on each zone's real map.
 
 ## What it does
 
-- Type-to-search pickers for the start and destination zone (114 zones, classic through Velious —
-  outdoor zones, city districts and the dungeons hanging off them).
+- Type-to-search pickers for the start and destination zone (114 zones — outdoor zones, city
+  districts and the dungeons hanging off them).
+- **Expansion toggles.** Classic is always on; Ruins of Kunark and Scars of Velious can each be
+  switched off, which removes those zones from the map, the pickers and the search — a server
+  running classic only cannot route through Kunark. Defaults to classic alone (71 zones);
+  all three gives 114. A zone's expansion follows its continent, since everything on Kunark
+  and Velious arrived with its own expansion. Selecting a zone and then switching its
+  expansion off moves the selection to one that still exists.
 - Toggles for **druid ports**, **wizard ports** and **boats**. A port is cast where you stand,
   so it is modelled as a one-way edge from *any* zone to any ring or spire destination —
   which is why enabling ports usually removes the walking before the port, not after it.
@@ -30,7 +36,7 @@ const COST = {walk:1, boat:2, druid:1, wizard:1};
 
 A zone line and a port each cost 1 hop; a boat costs 2, because you wait on the dock for it.
 The unequal weights are why this is Dijkstra and not a breadth-first search: BFS would offer
-you a two-boat crossing over a three-zone walk. With 87 zones the frontier is a linear scan
+you a two-boat crossing over a three-zone walk. With 114 zones the frontier is a linear scan
 rather than a heap. The search stops when the destination is the cheapest unfinalised zone,
 which is what makes the answer optimal rather than merely plausible.
 
