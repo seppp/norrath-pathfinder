@@ -1248,8 +1248,9 @@ function render(){
   syncEras();
   const from = STATE.from;
   const live = STATE.stops.filter(s => s.on && eraOn(s.zone));
-  const free = live.filter(s => !s.seq).map(s => s.zone);
-  const chain = live.filter(s => s.seq).map(s => s.zone);
+  const freeStops = live.filter(s => !s.seq), chainStops = live.filter(s => s.seq);
+  const free = freeStops.map(s => s.zone);
+  const chain = chainStops.map(s => s.zone);
   const single = live.length === 0;
   const targets = single ? [STATE.to] : free.concat(chain);
   const loop = $("loop").checked && !single;
@@ -1306,7 +1307,10 @@ function render(){
                     ? "In order &middot; " + (chainMarks.indexOf(mark)+1) + " of " + chainMarks.length
                     : "Stop " + (i+1) + " of " + freeCount;
       const homeAgain = loop && isLast && mark.zone === from;
-      const info = homeAgain ? null : STATE.stops.find(x => x.zone === mark.zone && x.note);
+      const nth = marks.slice(0, i+1).filter(m => m.fixed).length - 1;
+      const info = homeAgain ? null
+                 : mark.fixed ? chainStops[nth]
+                 : freeStops.find(x => x.zone === mark.zone);
       rows.push('<li class="seg stop' + (mark.fixed ? " fixed" : "") + '"><div class="kind">' + label + '</div>' +
         '<div class="zone">' + name(mark.zone) + '</div>' +
         (info ? '<div class="stopnote"><b>' + info.label + '</b> ' + info.note + '</div>' : "") +
@@ -1500,6 +1504,49 @@ const QUESTS = {
       {zone:"unrest",    label:"Jaka", loc:[520,-285],   note:"the hidden cavern floor right of the manor, in a cubby"}
     ],
     chain: []
+  },
+
+  shadow: {
+    name: "Collect Drops of Shadow",
+    start: "mistmoore",
+    loop: true,          // back to Ssynthi in the graveyard
+    free: [
+      {zone:"wcommons",  label:"Deathspeaker", note:"wherever the shadowed men walk"},
+      {zone:"kithicor",  label:"Deathspeaker", note:"wherever the shadowed men walk"},
+      {zone:"nektulos",  label:"Deathspeaker", note:"wherever the shadowed men walk"},
+      {zone:"innothule", label:"Deathspeaker", note:"wherever the shadowed men walk"},
+      {zone:"lavastorm", label:"Deathspeaker", note:"wherever the shadowed men walk"},
+      {zone:"rathe",     label:"Deathspeaker", note:"wherever the shadowed men walk"},
+      {zone:"skarana",   label:"Deathspeaker", note:"wherever the shadowed men walk — and Ytyrs the Reborn"}
+    ],
+    chain: []
+  },
+
+  rogue: {
+    name: "Rogue Redemption (Burning Rapier)",
+    start: "soltemple",
+    /* A pub crawl with a strict order: each errand hands you what the
+       next one needs, so every stop is locked. */
+    free: [],
+    chain: [
+      {zone:"soleye",     label:"Sol A",          note:"Clockwork Oil Stout from CWG Model CX, and Lynada the Exiled for the Sparkle purse"},
+      {zone:"kaladimb",   label:"Underfoot Bock", note:"buy the Underfoot Triple Bock"},
+      {zone:"felwithe",   label:"Tunare's Finest",note:"buy a bottle"},
+      {zone:"mistmoore",  label:"Blood Spirit",   note:"kill a Hemo Enologist"},
+      {zone:"cauldron",   label:"Conium Darkblade",note:"on top of the island — give him the Sealed Note"},
+      {zone:"efreeport",  label:"Vasty Deep Ale", note:"buy it at the first dock"},
+      {zone:"ocean",      label:"Oblong Bottle",  loc:[-1611,2924], note:"on the sea floor, south below the rock spires"},
+      {zone:"ecommons",   label:"Bubar",          note:"buy the Gator Gulp Ale"},
+      {zone:"wcommons",   label:"Noresa Sparkle", note:"hand over the Sparkle purse, buy the Sparkling Sapphire (500–550pp)"},
+      {zone:"rivervale",  label:"Lendel's Lager", note:"buy it — and the brew ingredients are upstairs in the Fool's Gold"},
+      {zone:"blackburrow",label:"Master Brewer",  note:"the cask always drops; four gnoll skins from elites"},
+      {zone:"halas",      label:"Frozen Toe Rum", note:"McDaniel's Smokes & Spirits, right as you enter"},
+      {zone:"highpass",   label:"Bryan McGee",    note:"upstairs in the Lumberyard — combine the crate for the Gem of Stamina"},
+      {zone:"wfreeport",  label:"Toxdil",         note:"behind the hidden wall — the Sapphire buys a Tiny Key"},
+      {zone:"efreeport",  label:"Hallard's Resale",note:"the Gem Case on the floor behind a 130 lockpick"},
+      {zone:"ecommons",   label:"Bubar again",    note:"both keys and the case for the Gem of Righteousness"},
+      {zone:"sro",        label:"Ortallius",      note:"the orc right of the entrance — both gems for the Burning Rapier"}
+    ]
   }
 };
 
