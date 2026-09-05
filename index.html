@@ -143,15 +143,20 @@
   .seg.stop .stopnote{color:var(--ink-soft);font-size:13.5px;margin-top:2px}
   .seg.stop .stopnote b{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;
     text-transform:uppercase;color:var(--gold);margin-right:6px;font-weight:600}
-  .grouplabel{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.12em;
-    text-transform:uppercase;color:var(--ink-faint);padding:8px 0 2px}
   .stoprow .ord{width:14px;flex:none;font-family:"JetBrains Mono",monospace;font-size:10px;
     color:var(--gold);font-weight:600;text-align:right}
   .stoprow .pin{background:none;border:0;cursor:pointer;font-size:11px;
     padding:2px 3px;margin-left:auto;line-height:1;opacity:.32;filter:grayscale(1)}
   .stoprow .pin.on{opacity:1;filter:none}
   .stoprow:hover .pin,.stoprow .pin:focus-visible{opacity:1}
+  .stoprow .rowbtns{margin-left:auto;display:flex;align-items:center;gap:1px}
   .stoprow .drop{margin-left:0}
+  .stoprow .nudge{background:none;border:0;cursor:pointer;color:var(--ink-faint);font-size:8px;
+    padding:2px 2px;line-height:1;opacity:.32}
+  .stoprow:hover .nudge,.stoprow .nudge:focus-visible{opacity:1}
+  .stoprow .nudge:hover{color:var(--gold)}
+  .stoprow .nudge:disabled{opacity:.1;cursor:default}
+  .stoprow .pin{margin-left:0}
   .seg.stop.fixed{border-left-color:var(--wiz)}
   .seg.stop.fixed .kind{color:var(--wiz)}
   .stoprow .slabel{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.1em;
@@ -339,7 +344,7 @@
             <span><span class="t-name">Return to the start</span>
             <span class="t-note">For a turn-in back where you began.</span></span>
           </label>
-          <p class="hint quest-hint">Stops are visited in whatever order is shortest. Shut a stop's padlock and it keeps its place in the list instead &mdash; for a quest that wants its turn-ins in sequence.</p>
+          <p class="hint quest-hint">Stops are visited in whatever order is shortest. Move one with the arrows to put it where you want it, which locks it there; the padlock alone does the same. Everything still unlocked is dealt into the gaps.</p>
         </div>
 
 
@@ -440,7 +445,7 @@
   <div class="notes">
     <div>
       <span class="eyebrow">Several stops at once</span>
-      <p>A stop can carry the spot you are actually going to. Load the Coin of Tash quest and each of the ten cities is marked with the coin's own /loc, drawn on that zone's map with the hint beside it &mdash; a wiki /loc is written (Y, X) and the map files hold its negation, checked against two quest NPCs that appear in both. Add stops and the route visits them in whatever order is shortest, not the order you added them &mdash; solved exactly up to twelve stops, and closely above that. A stop can be locked into its place instead, for a quest whose turn-ins have to happen in sequence; the free stops then finish wherever suits starting that chain. It is worth most when you are walking: the ten coins of the Coin of Tash quest take 120 zone lines in the order the guides list them and 66 in the best order, but with a druid and a wizard porting you the same errand is 30 against 29, because a port makes everywhere roughly equidistant.</p>
+      <p>A stop can carry the spot you are actually going to. Load the Coin of Tash quest and each of the ten cities is marked with the coin's own /loc, drawn on that zone's map with the hint beside it &mdash; a wiki /loc is written (Y, X) and the map files hold its negation, checked against two quest NPCs that appear in both. Add stops and the route visits them in whatever order is shortest, not the order you added them &mdash; solved exactly up to twelve stops, and closely above that. The stop list is the itinerary: move a stop with the arrows to put it where you want it, which locks it there, and the unlocked ones are dealt into the gaps that remain. A quest whose turn-ins have to happen in sequence just locks them. It is worth most when you are walking: the ten coins of the Coin of Tash quest take 120 zone lines in the order the guides list them and 66 in the best order, but with a druid and a wizard porting you the same errand is 30 against 29, because a port makes everywhere roughly equidistant.</p>
     </div>
     <div>
       <span class="eyebrow">How it scores</span>
@@ -775,102 +780,93 @@ function findPath(g,start,goal){
 }
 
 /* ── Visiting several places ──────────────────────────────────
-   Quests send you to a handful of zones in no particular order, and
-   the order you pick is usually worth more than the routing. Up to
-   twelve stops this is solved exactly (Held-Karp over subsets);
-   beyond that, nearest-neighbour with 2-opt, which is close enough
-   and never noticeably slow. */
-function orderStops(g, start, stops, endAt){
-  const nodes = [start].concat(stops);
-  const table = nodes.map(n => dijkstra(g, n));
-  const cost = (i,j) => {
-    const d = table[i].dist[nodes[j]];
+   The stop list is the itinerary. A locked stop keeps the position it
+   holds in that list; the rest are dealt into the positions left over,
+   in whatever order is cheapest. Exact while twelve or fewer stops are
+   unlocked (a subset walk over the free ones), greedy beyond. */
+function planStops(g, start, stops, loop){
+  const n = stops.length;
+  if (!n) return {order:[], cost:0};
+
+  const nodes = [start].concat(stops.map(s => s.zone));
+  const table = nodes.map(z => dijkstra(g, z));
+  const cost = (from, to) => {
+    const d = table[from].dist[nodes[to]];
     return d === undefined ? Infinity : d;
   };
-  const m = stops.length;
-  if (!m) return {order:[], cost:0};
 
-  const tail = endAt ? table.map((t,i) => {
-    const d = table[i].dist[endAt];
-    return d === undefined ? Infinity : d;
-  }) : null;
-  const finish = (order) => {
-    let c = 0, at = 0;
-    for (const j of order){ c += cost(at, j); at = j; }
-    if (tail) c += tail[at];
-    return c;
-  };
+  const free = stops.map((s,i) => i).filter(i => !stops[i].locked);
+  const bit = new Map(free.map((idx,k) => [idx, k]));
 
-  if (m <= 12){
-    const full = (1 << m) - 1;
-    const dp = new Float64Array((full+1) * m).fill(Infinity);
-    const back = new Int8Array((full+1) * m).fill(-1);
-    for (let j = 0; j < m; j++) dp[(1<<j)*m + j] = cost(0, j+1);
-    for (let mask = 1; mask <= full; mask++){
-      for (let j = 0; j < m; j++){
-        const here = dp[mask*m + j];
-        if (!(mask & (1<<j)) || here === Infinity) continue;
-        for (let k = 0; k < m; k++){
-          if (mask & (1<<k)) continue;
-          const next = mask | (1<<k), c = here + cost(j+1, k+1);
-          if (c < dp[next*m + k]){ dp[next*m + k] = c; back[next*m + k] = j; }
-        }
-      }
+  if (free.length > 12){          // too many to solve exactly: take the nearest that fits
+    const order = [], left = free.slice();
+    let at = 0;
+    for (let p = 0; p < n; p++){
+      if (stops[p].locked){ order.push(p); at = p+1; continue; }
+      let best = 0;
+      for (let i = 1; i < left.length; i++)
+        if (cost(at, left[i]+1) < cost(at, left[best]+1)) best = i;
+      order.push(left[best]); at = left[best]+1; left.splice(best, 1);
     }
-    let bestEnd = -1, best = Infinity;
-    for (let j = 0; j < m; j++){
-      const c = dp[full*m + j] + (tail ? tail[j+1] : 0);
-      if (c < best){ best = c; bestEnd = j; }
-    }
-    if (bestEnd < 0) return {order:stops.map((_,i) => i+1), cost:Infinity};
-    const order = [];
-    for (let mask = full, j = bestEnd; j >= 0; ){
-      order.unshift(j+1);
-      const prev = back[mask*m + j];
-      mask ^= (1<<j); j = prev;
-    }
-    return {order, cost:best};
+    return {order};
   }
 
-  // nearest neighbour, then 2-opt until it stops improving
-  let order = [], left = stops.map((_,i) => i+1), at = 0;
-  while (left.length){
-    let bi = 0;
-    for (let i = 1; i < left.length; i++) if (cost(at,left[i]) < cost(at,left[bi])) bi = i;
-    at = left[bi]; order.push(at); left.splice(bi,1);
+  /* One layer per position. A locked position admits only its own stop;
+     a free one admits any stop not yet placed. */
+  const key = (mask, last) => mask * (n+1) + last;
+  const layers = [new Map([[key(0,0), {c:0, from:null, took:-1}]])];
+  for (let p = 0; p < n; p++){
+    const next = new Map();
+    for (const [k, st] of layers[p]){
+      const mask = Math.floor(k / (n+1)), last = k % (n+1);
+      const push = (take, node) => {
+        const c = st.c + cost(last, node);
+        if (!isFinite(c)) return;
+        const nk = key(take === -1 ? mask : (mask | (1 << bit.get(take))), node);
+        const seen = next.get(nk);
+        if (!seen || c < seen.c) next.set(nk, {c, from:k, took:take});
+      };
+      if (stops[p].locked) push(-1, p+1);
+      else for (const i of free) if (!(mask & (1 << bit.get(i)))) push(i, i+1);
+    }
+    layers.push(next);
   }
-  for (let pass = 0; pass < 40; pass++){
-    let gained = false;
-    for (let i = 0; i < order.length-1; i++)
-      for (let k = i+1; k < order.length; k++){
-        const trial = order.slice(0,i).concat(order.slice(i,k+1).reverse(), order.slice(k+1));
-        if (finish(trial) < finish(order)){ order = trial; gained = true; }
-      }
-    if (!gained) break;
+
+  let bestKey = null, best = Infinity;
+  for (const [k, st] of layers[n]){
+    const c = st.c + (loop ? cost(k % (n+1), 0) : 0);
+    if (c < best){ best = c; bestKey = k; }
   }
-  return {order, cost:finish(order)};
+  if (bestKey === null) return {order:stops.map((_,i) => i), cost:Infinity};
+
+  const order = [];
+  let k = bestKey;
+  for (let p = n; p > 0; p--){
+    const st = layers[p].get(k);
+    order.unshift(st.took === -1 ? (k % (n+1)) - 1 : st.took);
+    k = st.from;
+  }
+  return {order, cost:best};
 }
 
-/* The whole journey as one list of legs, plus where each stop falls.
-   Free stops are reordered; a chain is walked as given, because a quest
-   that wants the coin enchanted three times wants it in that order. The
-   free stops finish wherever is cheapest for starting the chain. */
-function journey(g, start, free, chain, loop){
-  const endAt = chain.length ? chain[0] : (loop ? start : null);
-  const {order} = orderStops(g, start, free, endAt);
-  const seq = order.map(i => ({zone:free[i-1], fixed:false}))
-                   .concat(chain.map(z => ({zone:z, fixed:true})));
-  if (loop && seq.length && seq[seq.length-1].zone !== start)
-    seq.push({zone:start, fixed:true});
-
+/* The whole journey as one list of legs, plus where each stop falls. */
+function journey(g, start, stops, loop){
+  const plan = planStops(g, start, stops, loop);
+  const seq = plan.order.map(i => stops[i]);
   const legs = [], marks = [];
   let at = start;
-  for (const step of seq){
-    const part = findPath(g, at, step.zone);
-    if (part === null) return {legs:null, blocked:step.zone};
+  for (const stop of seq){
+    const part = findPath(g, at, stop.zone);
+    if (part === null) return {legs:null, blocked:stop.zone};
     legs.push(...part);
-    marks.push({zone:step.zone, index:legs.length, fixed:step.fixed});
-    at = step.zone;
+    marks.push({zone:stop.zone, index:legs.length, stop});
+    at = stop.zone;
+  }
+  if (loop && seq.length && at !== start){
+    const back = findPath(g, at, start);
+    if (back === null) return {legs:null, blocked:start};
+    legs.push(...back);
+    marks.push({zone:start, index:legs.length, home:true});
   }
   return {legs, marks, seq};
 }
@@ -1248,27 +1244,25 @@ function render(){
   syncEras();
   const from = STATE.from;
   const live = STATE.stops.filter(s => s.on && eraOn(s.zone));
-  const freeStops = live.filter(s => !s.seq), chainStops = live.filter(s => s.seq);
-  const free = freeStops.map(s => s.zone);
-  const chain = chainStops.map(s => s.zone);
   const single = live.length === 0;
-  const targets = single ? [STATE.to] : free.concat(chain);
   const loop = $("loop").checked && !single;
 
   const opts = {dru:$("dru").checked, wiz:$("wiz").checked, boats:$("boats").checked};
   const g = buildGraph(opts);
-  const trip = single ? journey(g, from, [], [STATE.to], false)
-                      : journey(g, from, free, chain, loop);
+  const trip = single ? journey(g, from, [{zone:STATE.to}], false)
+                      : journey(g, from, live, loop);
+  if (!single && trip.seq) reflowStops(trip.seq);
   const legs = trip.legs;
   const body = $("routeBody");
 
   renderStops();
   $("routeTitle").textContent = single
     ? (from === STATE.to ? "Route" : name(from) + " → " + name(STATE.to))
-    : name(from) + " → " + targets.length + " stops" + (loop ? " and back" : "");
+    : name(from) + " → " + live.length + " stops" + (loop ? " and back" : "");
 
-  drawRoute(legs, from, targets[targets.length-1], trip.marks || []);
-  renderZoneCards(legs, targets[targets.length-1]);
+  const last = single ? STATE.to : (trip.seq && trip.seq.length ? trip.seq[trip.seq.length-1].zone : from);
+  drawRoute(legs, from, last, trip.marks || []);
+  renderZoneCards(legs, last);
 
   if (legs === null){
     $("statHops").textContent = $("statPorts").textContent = $("statBoats").textContent = "—";
@@ -1299,19 +1293,13 @@ function render(){
     const isLast = i === marks.length - 1;
     rows.push(...segs.map((sg,j) => segHTML(sg, isLast && j === segs.length-1)));
     if (!isLast || marks.length > 1){
-      const freeCount = marks.filter(m => !m.fixed).length;
-      const chainMarks = marks.filter(m => m.fixed);
+      const stopMarks = marks.filter(m => !m.home);
       const label = marks.length === 1 ? "Arrive"
-                  : (loop && isLast && mark.zone === from) ? "Back where you started"
-                  : mark.fixed
-                    ? "In order &middot; " + (chainMarks.indexOf(mark)+1) + " of " + chainMarks.length
-                    : "Stop " + (i+1) + " of " + freeCount;
-      const homeAgain = loop && isLast && mark.zone === from;
-      const nth = marks.slice(0, i+1).filter(m => m.fixed).length - 1;
-      const info = homeAgain ? null
-                 : mark.fixed ? chainStops[nth]
-                 : freeStops.find(x => x.zone === mark.zone);
-      rows.push('<li class="seg stop' + (mark.fixed ? " fixed" : "") + '"><div class="kind">' + label + '</div>' +
+                  : mark.home ? "Back where you started"
+                  : "Stop " + (stopMarks.indexOf(mark)+1) + " of " + stopMarks.length +
+                    (mark.stop && mark.stop.locked ? " &middot; locked" : "");
+      const info = mark.home ? null : mark.stop;
+      rows.push('<li class="seg stop' + (mark.stop && mark.stop.locked ? " fixed" : "") + '"><div class="kind">' + label + '</div>' +
         '<div class="zone">' + name(mark.zone) + '</div>' +
         (info ? '<div class="stopnote"><b>' + info.label + '</b> ' + info.note + '</div>' : "") +
         '</li>');
@@ -1325,49 +1313,66 @@ const STATE = {from:"kaladim", to:"grobb", stops:[]};
 const ALL_ZONES = Object.keys(ZONES).sort((a,b) => name(a).localeCompare(name(b)));
 const REGION_ORDER = {Antonica:0, Faydwer:1, Odus:2, Seas:3, Kunark:4, Velious:5, Planes:6};
 
+/* The list is the itinerary, so once the plan is solved the list is
+   rewritten to match it. Disabled stops stay where they are. */
+function reflowStops(seq){
+  const wanted = seq.slice();
+  STATE.stops = STATE.stops.map(s => (s.on && eraOn(s.zone)) ? wanted.shift() : s)
+                           .filter(Boolean);
+}
+
+function moveStop(i, dir){
+  const j = i + dir;
+  if (j < 0 || j >= STATE.stops.length) return;
+  const s = STATE.stops[i];
+  STATE.stops[i] = STATE.stops[j];
+  STATE.stops[j] = s;
+  s.locked = true;              // putting a stop somewhere is a decision
+  render();
+}
+
 function renderStops(){
   const list = STATE.stops.filter(s => eraOn(s.zone));
   STATE.stops = list;
   $("stopsBox").hidden = !list.length;
-  $("stopCount").textContent = list.length ? "· " + list.filter(s => s.on).length + " of " + list.length : "";
+  const on = list.filter(s => s.on).length;
+  $("stopCount").textContent = list.length ? "· " + on + " of " + list.length : "";
 
-  const row = (s, i, n) =>
-    '<li class="stoprow' + (s.on ? "" : " off") + (s.seq ? " fixed" : "") + '">' +
-    (n ? '<span class="ord">' + n + '</span>' : '') +
+  $("stopList").innerHTML = list.map((s,i) =>
+    '<li class="stoprow' + (s.on ? "" : " off") + (s.locked ? " fixed" : "") + '">' +
+    '<span class="ord">' + (i+1) + '</span>' +
     '<input type="checkbox" data-stop="' + i + '"' + (s.on ? " checked" : "") +
     ' aria-label="Visit ' + name(s.zone) + '">' +
     '<span class="sname">' + name(s.zone) +
     (s.label ? '<span class="slabel">' + s.label + '</span>' : "") + '</span>' +
-    /* Both states are padlocks, open or shut: the button says what the
-       stop is, not what the click would do. */
-    '<button class="pin' + (s.seq ? " on" : "") + '" data-seq="' + i + '" type="button" ' +
-    'aria-pressed="' + (s.seq ? "true" : "false") + '" ' +
-    'title="' + (s.seq ? "Locked in place — click to let it be reordered"
-                       : "Free to reorder — click to lock it in place") + '" ' +
-    'aria-label="' + name(s.zone) + (s.seq ? ", locked in place" : ", free to reorder") + '">' +
-    (s.seq ? "&#128274;" : "&#128275;") + '</button>' +
-    '<button class="drop" data-drop="' + i + '" type="button" ' +
-    'aria-label="Remove ' + name(s.zone) + '">&times;</button></li>';
-
-  const free = list.map((s,i) => [s,i]).filter(([s]) => !s.seq);
-  const fixed = list.map((s,i) => [s,i]).filter(([s]) => s.seq);
-  $("stopList").innerHTML =
-    (free.length ? '<li class="grouplabel">Any order</li>' + free.map(([s,i]) => row(s,i)).join("") : "") +
-    (fixed.length ? '<li class="grouplabel">In this order</li>' +
-       fixed.map(([s,i],k) => row(s,i,k+1)).join("") : "");
+    '<span class="rowbtns">' +
+      '<button class="nudge" data-up="' + i + '" type="button" ' + (i === 0 ? "disabled " : "") +
+      'aria-label="Move ' + name(s.zone) + ' earlier">&#9650;</button>' +
+      '<button class="nudge" data-down="' + i + '" type="button" ' +
+      (i === list.length-1 ? "disabled " : "") +
+      'aria-label="Move ' + name(s.zone) + ' later">&#9660;</button>' +
+      '<button class="pin' + (s.locked ? " on" : "") + '" data-seq="' + i + '" type="button" ' +
+      'aria-pressed="' + (s.locked ? "true" : "false") + '" ' +
+      'title="' + (s.locked ? "Locked to position " + (i+1) + " — click to let it move"
+                            : "Free to be reordered — click to keep it at " + (i+1)) + '" ' +
+      'aria-label="' + name(s.zone) + (s.locked ? ", locked in place" : ", free to reorder") + '">' +
+      (s.locked ? "&#128274;" : "&#128275;") + '</button>' +
+      '<button class="drop" data-drop="' + i + '" type="button" ' +
+      'aria-label="Remove ' + name(s.zone) + '">&times;</button>' +
+    '</span></li>').join("");
 
   const box = $("stopList");
+  const bind = (sel, fn) => { for (const el of box.querySelectorAll(sel)) el.addEventListener("click", () => fn(el)); };
   for (const el of box.querySelectorAll("input[data-stop]"))
     el.addEventListener("change", () => { STATE.stops[+el.dataset.stop].on = el.checked; render(); });
-  for (const el of box.querySelectorAll("button[data-drop]"))
-    el.addEventListener("click", () => { STATE.stops.splice(+el.dataset.drop, 1); render(); });
-  for (const el of box.querySelectorAll("button[data-seq]"))
-    el.addEventListener("click", () => {
-      const s = STATE.stops[+el.dataset.seq];
-      s.seq = !s.seq;
-      if (s.seq){ STATE.stops.splice(STATE.stops.indexOf(s), 1); STATE.stops.push(s); }
-      render();
-    });
+  bind("button[data-up]",   el => moveStop(+el.dataset.up, -1));
+  bind("button[data-down]", el => moveStop(+el.dataset.down, 1));
+  bind("button[data-drop]", el => { STATE.stops.splice(+el.dataset.drop, 1); render(); });
+  bind("button[data-seq]",  el => {
+    const s = STATE.stops[+el.dataset.seq];
+    s.locked = !s.locked;
+    render();
+  });
 }
 
 function addStop(zone){
@@ -1583,8 +1588,8 @@ $("questPick").addEventListener("change", ev => {
   const q = QUESTS[ev.target.value];
   if (!q) return;
   setZone("from", q.start);
-  STATE.stops = q.free.map(c => Object.assign({on:true, seq:false}, c))
-             .concat(q.chain.map(c => Object.assign({on:true, seq:true}, c)));
+  STATE.stops = q.free.map(c => Object.assign({on:true, locked:false}, c))
+             .concat(q.chain.map(c => Object.assign({on:true, locked:true}, c)));
   $("loop").checked = !!q.loop;
   render();
 });

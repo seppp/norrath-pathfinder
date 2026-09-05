@@ -21,9 +21,11 @@ switched on or off, drawn on a schematic world map and on each zone's real map.
 - Dijkstra over the zone graph — see [How routing works](#how-routing-works).
 - **Several stops at once**, each toggleable, visited in whatever order is shortest. Exact up
   to twelve stops (Held-Karp over subsets), nearest-neighbour plus 2-opt beyond, with an
-  optional return to the start. A stop can be **locked** into its position instead, so a quest's
-  turn-in chain runs in sequence while everything else reorders around it — the free stops are
-  solved to finish wherever is cheapest for starting the chain. Picking a quest from the selector beside the theme toggle fills in its stops:
+  optional return to the start. The stop list **is** the itinerary: a stop
+  can be moved with the arrows, which locks it to that position, and the unlocked stops are
+  dealt into whichever gaps are left, cheapest first. A quest whose turn-ins must happen in
+  sequence simply locks them. Solved exactly while twelve or fewer stops are unlocked (a
+  layered subset walk over the free ones, one layer per position), greedy beyond. Picking a quest from the selector beside the theme toggle fills in its stops:
   the Coin of Tash gives ten coin cities plus a locked four-step turn-in chain, and its ten
   coins alone are 120 zone lines in the order the guides list them, 66 in the best order on foot.
   A stop can carry a `/loc` and a hint, drawn as a marker on that zone's own map — wiki `/loc`
