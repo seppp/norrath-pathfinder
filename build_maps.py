@@ -52,7 +52,7 @@ FILES = {
  "citymist":["citymist"], "charasis":["charasis"], "veeshan":["veeshan"],
  "crystal":["crystal"], "velketor":["velketor"], "templeveeshan":["templeveeshan"],
  "necropolis":["necropolis"], "sleeper":["sleeper"], "icewell":["thurgadinb"],
- "stonebrunt":["stonebrunt"],
+ "stonebrunt":["stonebrunt"], "hate":["hateplane"], "sky":["airplane"],
 }
 
 # zone id -> the display name, for matching "to_..." labels
@@ -97,7 +97,7 @@ NAMES = {
  "crystal":"Crystal Caverns","velketor":"Velketor's Labyrinth",
  "templeveeshan":"Temple of Veeshan","necropolis":"Dragon Necropolis",
  "sleeper":"Sleeper's Tomb","icewell":"Icewell Keep",
- "stonebrunt":"Stonebrunt Mountains",
+ "stonebrunt":"Stonebrunt Mountains","hate":"Plane of Hate","sky":"Plane of Sky",
 }
 
 # extra spellings the map labels use
@@ -214,6 +214,8 @@ ALIASES = {
  "sleeper":["sleeper s tomb","the sleeper s tomb","sleepers tomb"],
  "icewell":["icewell keep","the icewell keep"],
  "stonebrunt":["stonebrunt mountains","stonebrunt","the stonebrunt mountains"],
+ "hate":["plane of hate","the plane of hate","hate plane"],
+ "sky":["plane of sky","the plane of sky","sky plane","air plane"],
 }
 
 def norm(s):
