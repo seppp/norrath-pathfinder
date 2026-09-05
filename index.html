@@ -295,14 +295,14 @@
             <input type="checkbox" id="dru" checked>
             <span>
               <span class="t-name"><span class="dot" style="background:var(--druid)"></span>Druid ports</span>
-              <span class="t-note">Ring spells &mdash; cast anywhere, land at any ring zone.</span>
+              <span class="t-note">Rings and circles &mdash; cast anywhere, land at any ring zone.</span>
             </span>
           </label>
           <label class="toggle">
             <input type="checkbox" id="wiz" checked>
             <span>
               <span class="t-name"><span class="dot" style="background:var(--wiz)"></span>Wizard ports</span>
-              <span class="t-note">Teleports &mdash; cast anywhere, land at any spire zone.</span>
+              <span class="t-note">Gates and portals &mdash; cast anywhere, land at any spire zone.</span>
             </span>
           </label>
           <label class="toggle">
@@ -574,31 +574,33 @@ const EDGES = [
 ];
 
 /* Port destinations: zone -> the spell that lands you there */
+/* Names and destinations from the Legends ritual table (eqlwiki.com/Rituals,
+   2026-06-20). Rings are self, Circles the group version of the same trip;
+   Succor: East Karana is the only way a druid ports there. */
 const DRUID = {
-  // classic
   surefall:"Ring of Surefall Glade", nkarana:"Ring of North Karana",
   wcommons:"Ring of West Commons", toxxulia:"Ring of Toxxulia",
   butcherblock:"Ring of Butcherblock", steamfont:"Ring of Steamfont",
   lavastorm:"Ring of Lavastorm", feerrott:"Ring of Feerrott",
   sro:"Ring of South Ro", misty:"Ring of Misty Thicket",
-  stonebrunt:"Ring of Stonebrunt",
-  // Kunark
+  stonebrunt:"Ring of Stonebrunt", ekarana:"Succor: East Karana",
+  // Kunark and Velious are not in Legends; live EQ names, shown only when
+  // those expansions are switched on
   dreadlands:"Circle of the Combines", skyfire:"Wind of the North",
-  emerald:"Wind of the South",
-  // Velious
-  iceclad:"Ring of Iceclad", gdivide:"Ring of the Great Divide",
-  cobalt:"Ring of Cobalt Scar", wakening:"Ring of Wakening Lands"
+  emerald:"Wind of the South", iceclad:"Ring of Iceclad",
+  gdivide:"Ring of the Great Divide", cobalt:"Ring of Cobalt Scar",
+  wakening:"Ring of Wakening Lands"
 };
+/* Gate is the self version, Portal the group one; Evacuate: South Ro is the
+   only wizard route to that zone. Same source and date as DRUID. */
 const WIZARD = {
-  // classic
   nektulos:"Nektulos Portal", nro:"North Ro Portal",
   wcommons:"West Commons Portal", nkarana:"North Karana Portal",
   wkarana:"West Karana Portal", toxxulia:"Toxxulia Portal",
   stonebrunt:"Stonebrunt Portal", gfay:"Greater Faydark Portal",
-  cazic:"Cazic Portal",
-  // Kunark
+  cazic:"Cazic Temple Portal", sro:"Evacuate: South Ro",
+  // live EQ names, only reachable with those expansions switched on
   dreadlands:"Combine Portal", skyfire:"Skyfire Portal",
-  // Velious
   iceclad:"Iceclad Portal", gdivide:"Great Divide Portal",
   cobalt:"Cobalt Scar Portal", wakening:"Wakening Lands Portal"
 };

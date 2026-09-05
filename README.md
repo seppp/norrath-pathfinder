@@ -100,12 +100,13 @@ Four tables at the top of the script in `index.html`, one line per entry:
 - `EDGES` — `[a, b]` for a zone line, `[a, b, "boat"]` for a ship
 - `DRUID` / `WIZARD` — `zone: "Spell Name"` for each port destination
 
-Port destinations follow **EverQuest Legends'** spell lists, not live EQ's — they differ.
-Legends druids get South Ro and Stonebrunt, which live classic does not; Legends wizards get
-Nektulos, West Karana, Stonebrunt, Greater Faydark and Cazic, and use `<Zone> Gate/Portal/
-Translocate` naming rather than `Teleport:`. Sources: [EQLForge druid](https://eqlforge.com/spells/druid),
-[EQLForge wizard](https://eqlforge.com/spells/wizard), [EQProgression](https://www.eqprogression.com/legends/druid-portal-spells/),
-cross-checked against the `Druid_Ring` and `Wizard_Spires` markers in the map pack.
+Port destinations and spell names come from the Legends ritual table
+([eqlwiki.com/Rituals](https://eqlwiki.com/Rituals), as of 2026-06-20), not live EQ — they
+differ. Druids get Rings (self) and Circles (group) to eleven zones plus Succor: East Karana;
+wizards get Gates (self) and Portals (group) to nine zones plus Evacuate: South Ro. The page
+names the group version, since it is the one you ask a porter for. Kunark and Velious have no
+rituals in Legends, so those destinations keep live EQ names and only appear when you switch
+those expansions on.
 
 The graph is a reconstruction of classic/Kunark/Velious connectivity; correct anything your
 server does differently and reload.
