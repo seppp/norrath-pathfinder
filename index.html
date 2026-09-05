@@ -108,6 +108,33 @@
   .toggle input:disabled{opacity:.55}
   .toggle input:disabled + span .t-name{color:var(--ink-soft)}
   #zoneCount{font-family:"JetBrains Mono",monospace;letter-spacing:.06em;text-transform:none}
+  .addstop{width:100%;background:var(--surface-2);border:1px solid var(--rule);color:var(--ink);
+    font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    padding:8px 10px;border-radius:2px;cursor:pointer;margin-top:-6px}
+  .addstop:hover{border-color:var(--gold);color:var(--gold)}
+  .stops{display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--rule)}
+  .stops-head{display:flex;align-items:baseline;gap:8px}
+  .linkish{margin-left:auto;background:none;border:0;padding:0;cursor:pointer;color:var(--ink-faint);
+    font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    text-decoration:underline;text-underline-offset:3px}
+  .linkish:hover{color:var(--gold)}
+  .stoplist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
+  .stoprow{display:flex;align-items:center;gap:9px;padding:4px 0}
+  .stoprow input{accent-color:var(--gold);width:14px;height:14px;cursor:pointer;flex:none}
+  .stoprow .sname{font-family:Cinzel,serif;font-size:14px;line-height:1.2}
+  .stoprow.off .sname{color:var(--ink-faint);text-decoration:line-through}
+  .stoprow .drop{margin-left:auto;background:none;border:0;color:var(--ink-faint);cursor:pointer;
+    font-size:15px;line-height:1;padding:2px 4px}
+  .stoprow .drop:hover{color:var(--portal)}
+  .toggle.loop{padding-top:6px;border-top:1px dashed var(--rule);margin-top:2px}
+  .quest-hint{border:0;padding-top:0;font-size:12.5px}
+  .preset{display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:1px solid var(--rule)}
+  .preset .linkish{margin-left:0;text-align:left;color:var(--ink-soft)}
+
+  .seg.stop{padding:8px 12px;border-radius:2px;background:var(--surface-2);border-left-color:var(--gold)}
+  .seg.stop .kind{color:var(--gold)}
+  .seg.stop .zone{font-weight:700;font-size:18px}
+
   .hint{font-size:13.5px;color:var(--ink-faint);border-top:1px solid var(--rule);padding-top:12px;margin:0}
   .hint b{color:var(--ink-soft)}
 
@@ -269,6 +296,27 @@
           </span>
         </label>
 
+        <button class="addstop" id="addStop" type="button">+ Add as a stop</button>
+
+        <div class="stops" id="stopsBox" hidden>
+          <div class="stops-head">
+            <span class="eyebrow">Stops <span id="stopCount"></span></span>
+            <button class="linkish" id="clearStops" type="button">Clear</button>
+          </div>
+          <ul class="stoplist" id="stopList"></ul>
+          <label class="toggle loop">
+            <input type="checkbox" id="loop">
+            <span><span class="t-name">Return to the start</span>
+            <span class="t-note">For a turn-in back where you began.</span></span>
+          </label>
+          <p class="hint quest-hint">Stops are visited in whatever order is shortest, not the order you add them.</p>
+        </div>
+
+        <div class="preset">
+          <span class="eyebrow">Try a quest</span>
+          <button class="linkish" id="questTash" type="button">Coin of Tash &mdash; 10 coins</button>
+        </div>
+
         <div class="toggles">
           <span class="eyebrow" style="padding-top:12px">Expansions <span id="zoneCount"></span></span>
           <label class="toggle">
@@ -319,7 +367,7 @@
           </label>
         </div>
 
-        <p class="hint">On the map, <b>click a zone</b> to set the destination, <b>shift-click</b> to set the start.</p>
+        <p class="hint">On the map, <b>click a zone</b> to set the destination, <b>shift-click</b> to set the start, <b>alt-click</b> to add it as a stop. Once a journey has stops, a plain click adds another.</p>
       </div>
     </section>
 
@@ -364,6 +412,10 @@
   </div>
 
   <div class="notes">
+    <div>
+      <span class="eyebrow">Several stops at once</span>
+      <p>Add stops and the route visits them in whatever order is shortest, not the order you added them &mdash; solved exactly up to twelve stops, and closely above that. It is worth most when you are walking: the ten coins of the Coin of Tash quest take 120 zone lines in the order the guides list them and 66 in the best order, but with a druid and a wizard porting you the same errand is 30 against 29, because a port makes everywhere roughly equidistant.</p>
+    </div>
     <div>
       <span class="eyebrow">How it scores</span>
       <p>Each zone line and each port counts as one hop; a boat counts as two, since you wait for it. A port is cast where you stand, so it skips everything between you and its destination &mdash; switching ports off shows you the walk instead. Where several routes tie &mdash; with ports, they often do &mdash; the page picks one and stays with it, so the same choices always give you the same route.</p>
@@ -667,25 +719,123 @@ function buildGraph(opts){
    Both comparisons below are strict, so among equal-cost routes the one found
    first wins: deterministic, though the winner is arbitrary. Because druid
    edges are added to the graph before wizard ones, an exact tie goes to druid. */
-function findPath(g,start,goal){
-  if (start === goal) return [];
-  const dist = {}, prev = {}, seen = {};
-  dist[start] = 0;
+function dijkstra(g, start){
+  const dist = {[start]:0}, prev = {}, seen = {};
   for(;;){
     let cur = null, best = Infinity;
     for (const z in dist) if (!seen[z] && dist[z] < best){ best = dist[z]; cur = z; }
-    if (cur === null) return null;
-    if (cur === goal) break;
+    if (cur === null) return {dist, prev};
     seen[cur] = true;
     for (const e of (g[cur] || [])){
       const d = best + COST[e.type];
       if (!(e.to in dist) || d < dist[e.to]){ dist[e.to] = d; prev[e.to] = {from:cur, type:e.type}; }
     }
   }
+}
+
+function walkBack(prev, start, goal){
   const legs = [];
-  for (let z = goal; z !== start; z = prev[z].from)
+  for (let z = goal; z !== start; z = prev[z].from){
+    if (!prev[z]) return null;
     legs.unshift({from:prev[z].from, to:z, type:prev[z].type});
+  }
   return legs;
+}
+
+function findPath(g,start,goal){
+  if (start === goal) return [];
+  const {dist, prev} = dijkstra(g, start);
+  return (goal in dist) ? walkBack(prev, start, goal) : null;
+}
+
+/* ── Visiting several places ──────────────────────────────────
+   Quests send you to a handful of zones in no particular order, and
+   the order you pick is usually worth more than the routing. Up to
+   twelve stops this is solved exactly (Held-Karp over subsets);
+   beyond that, nearest-neighbour with 2-opt, which is close enough
+   and never noticeably slow. */
+function orderStops(g, start, stops, loop){
+  const nodes = [start].concat(stops);
+  const table = nodes.map(n => dijkstra(g, n));
+  const cost = (i,j) => {
+    const d = table[i].dist[nodes[j]];
+    return d === undefined ? Infinity : d;
+  };
+  const m = stops.length;
+  if (!m) return {order:[], cost:0};
+
+  const finish = (order) => {
+    let c = 0, at = 0;
+    for (const j of order){ c += cost(at, j); at = j; }
+    if (loop) c += cost(at, 0);
+    return c;
+  };
+
+  if (m <= 12){
+    const full = (1 << m) - 1;
+    const dp = new Float64Array((full+1) * m).fill(Infinity);
+    const back = new Int8Array((full+1) * m).fill(-1);
+    for (let j = 0; j < m; j++) dp[(1<<j)*m + j] = cost(0, j+1);
+    for (let mask = 1; mask <= full; mask++){
+      for (let j = 0; j < m; j++){
+        const here = dp[mask*m + j];
+        if (!(mask & (1<<j)) || here === Infinity) continue;
+        for (let k = 0; k < m; k++){
+          if (mask & (1<<k)) continue;
+          const next = mask | (1<<k), c = here + cost(j+1, k+1);
+          if (c < dp[next*m + k]){ dp[next*m + k] = c; back[next*m + k] = j; }
+        }
+      }
+    }
+    let bestEnd = -1, best = Infinity;
+    for (let j = 0; j < m; j++){
+      const c = dp[full*m + j] + (loop ? cost(j+1, 0) : 0);
+      if (c < best){ best = c; bestEnd = j; }
+    }
+    if (bestEnd < 0) return {order:stops.map((_,i) => i+1), cost:Infinity};
+    const order = [];
+    for (let mask = full, j = bestEnd; j >= 0; ){
+      order.unshift(j+1);
+      const prev = back[mask*m + j];
+      mask ^= (1<<j); j = prev;
+    }
+    return {order, cost:best};
+  }
+
+  // nearest neighbour, then 2-opt until it stops improving
+  let order = [], left = stops.map((_,i) => i+1), at = 0;
+  while (left.length){
+    let bi = 0;
+    for (let i = 1; i < left.length; i++) if (cost(at,left[i]) < cost(at,left[bi])) bi = i;
+    at = left[bi]; order.push(at); left.splice(bi,1);
+  }
+  for (let pass = 0; pass < 40; pass++){
+    let gained = false;
+    for (let i = 0; i < order.length-1; i++)
+      for (let k = i+1; k < order.length; k++){
+        const trial = order.slice(0,i).concat(order.slice(i,k+1).reverse(), order.slice(k+1));
+        if (finish(trial) < finish(order)){ order = trial; gained = true; }
+      }
+    if (!gained) break;
+  }
+  return {order, cost:finish(order)};
+}
+
+/* The whole journey as one list of legs, plus where each stop falls. */
+function journey(g, start, stops, loop){
+  const {order} = orderStops(g, start, stops, loop);
+  const seq = order.map(i => stops[i-1]);
+  if (loop && stops.length) seq.push(start);
+  const legs = [], marks = [];
+  let at = start;
+  for (const target of seq){
+    const part = findPath(g, at, target);
+    if (part === null) return {legs:null, blocked:target};
+    legs.push(...part);
+    marks.push({zone:target, index:legs.length});
+    at = target;
+  }
+  return {legs, marks, seq};
 }
 
 /* ── Map ──────────────────────────────────────────────────── */
@@ -731,7 +881,11 @@ function drawBaseMap(){
       const t = el("text",{class:"anchor-label",x:p.x+8,y:p.y-7},svg);
       t.textContent = name(id);
     }
-    const pick = ev => setZone(ev.shiftKey ? "from" : "to", id);
+    const pick = ev => {
+      if (ev.shiftKey) setZone("from", id);
+      else if (ev.altKey || STATE.stops.length) addStop(id);
+      else setZone("to", id);
+    };
     g.addEventListener("click", pick);
     g.addEventListener("keydown", ev => {
       if (ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); pick(ev); }
@@ -748,7 +902,7 @@ function arc(p,q){
          " " + q.x + " " + q.y;
 }
 
-function drawRoute(legs, from, to){
+function drawRoute(legs, from, to, marks){
   routeLayer.textContent = "";
   if (!legs) return;
 
@@ -762,12 +916,17 @@ function drawRoute(legs, from, to){
     if (spell) el("title",{},path).textContent = spell + " — cast from " + name(leg.from);
   }
 
-  const stops = legs.length ? legs.map(l => l.from).concat([to]) : [from];
+  /* Only the places you meant to go get a marker: on a ten-stop quest,
+     labelling every zone passed through buries the ones that matter. */
+  const stops = [from].concat((marks && marks.length ? marks.map(m => m.zone) : [to]));
+  const seen = new Set();
   stops.forEach((z,i) => {
+    if (seen.has(z + ":" + i)) return;
+    seen.add(z + ":" + i);
     const p = pos(z);
     el("circle",{class:"stop-mark",cx:p.x,cy:p.y,r:9},routeLayer);
     const n = el("text",{class:"stop-num",x:p.x,y:p.y+3.4},routeLayer);
-    n.textContent = i+1;
+    n.textContent = i === 0 ? "S" : i;
     const t = el("text",{class:"stop-label",x:p.x+13,y:p.y+4},routeLayer);
     t.textContent = name(z);
   });
@@ -1020,20 +1179,31 @@ function syncEras(){
 
 function render(){
   syncEras();
-  const from = STATE.from, to = STATE.to;
+  const from = STATE.from;
+  const stops = STATE.stops.filter(s => s.on).map(s => s.zone).filter(eraOn);
+  const single = stops.length === 0;
+  const targets = single ? [STATE.to] : stops;
+  const loop = $("loop").checked && !single;
+
   const opts = {dru:$("dru").checked, wiz:$("wiz").checked, boats:$("boats").checked};
-  const legs = findPath(buildGraph(opts), from, to);
+  const g = buildGraph(opts);
+  const trip = journey(g, from, targets, loop);
+  const legs = trip.legs;
   const body = $("routeBody");
 
-  $("routeTitle").textContent = from === to ? "Route" : name(from) + " → " + name(to);
-  drawRoute(legs, from, to);
-  renderZoneCards(legs, to);
+  renderStops();
+  $("routeTitle").textContent = single
+    ? (from === STATE.to ? "Route" : name(from) + " → " + name(STATE.to))
+    : name(from) + " → " + targets.length + " stops" + (loop ? " and back" : "");
+
+  drawRoute(legs, from, targets[targets.length-1], trip.marks || []);
+  renderZoneCards(legs, targets[targets.length-1]);
 
   if (legs === null){
     $("statHops").textContent = $("statPorts").textContent = $("statBoats").textContent = "—";
     body.innerHTML = '<div class="empty"><strong>No route with these rules.</strong>' +
-      name(from) + " and " + name(to) +
-      " are only linked by travel you have switched off &mdash; turn boats or ports back on.</div>";
+      name(trip.blocked) + " cannot be reached from where the journey has got to &mdash; " +
+      "turn boats or ports back on, or drop that stop.</div>";
     return;
   }
   if (!legs.length){
@@ -1047,17 +1217,60 @@ function render(){
   $("statPorts").textContent = legs.filter(l => l.type === "druid" || l.type === "wizard").length;
   $("statBoats").textContent = legs.filter(l => l.type === "boat").length;
 
-  const segs = segments(legs);
+  const marks = trip.marks || [];
   const rows = ['<li class="seg start"><div class="kind">Start &middot; ' + region(from) + '</div>' +
-                '<div class="zone">' + name(from) + '</div></li>']
-    .concat(segs.map((s,i) => segHTML(s, i === segs.length-1)));
+                '<div class="zone">' + name(from) + '</div></li>'];
+  let cut = 0;
+  marks.forEach((mark, i) => {
+    const part = legs.slice(cut, mark.index);
+    cut = mark.index;
+    const segs = segments(part);
+    const isLast = i === marks.length - 1;
+    rows.push(...segs.map((sg,j) => segHTML(sg, isLast && j === segs.length-1)));
+    if (!isLast || marks.length > 1){
+      const total = marks.length - (loop ? 1 : 0);
+      const label = marks.length === 1 ? "Arrive"
+                  : (loop && isLast) ? "Back where you started"
+                  : "Stop " + (i+1) + " of " + total;
+      rows.push('<li class="seg stop"><div class="kind">' + label + '</div>' +
+        '<div class="zone">' + name(mark.zone) + '</div></li>');
+    }
+  });
   body.innerHTML = '<ol class="itinerary">' + rows.join("") + '</ol>';
 }
 
 /* ── Zone search boxes ────────────────────────────────────── */
-const STATE = {from:"kaladim", to:"grobb"};
+const STATE = {from:"kaladim", to:"grobb", stops:[]};
 const ALL_ZONES = Object.keys(ZONES).sort((a,b) => name(a).localeCompare(name(b)));
 const REGION_ORDER = {Antonica:0, Faydwer:1, Odus:2, Seas:3, Kunark:4, Velious:5, Planes:6};
+
+function renderStops(){
+  const list = STATE.stops.filter(s => eraOn(s.zone));
+  STATE.stops = list;
+  $("stopsBox").hidden = !list.length;
+  $("stopCount").textContent = list.length ? "· " + list.filter(s => s.on).length + " of " + list.length : "";
+  $("stopList").innerHTML = list.map((s,i) =>
+    '<li class="stoprow' + (s.on ? "" : " off") + '">' +
+    '<input type="checkbox" data-stop="' + i + '"' + (s.on ? " checked" : "") +
+    ' aria-label="Visit ' + name(s.zone) + '">' +
+    '<span class="sname">' + name(s.zone) + '</span>' +
+    '<button class="drop" data-drop="' + i + '" type="button" ' +
+    'aria-label="Remove ' + name(s.zone) + '">&times;</button></li>').join("");
+
+  for (const box of $("stopList").querySelectorAll("input[data-stop]"))
+    box.addEventListener("change", () => {
+      STATE.stops[+box.dataset.stop].on = box.checked; render();
+    });
+  for (const btn of $("stopList").querySelectorAll("button[data-drop]"))
+    btn.addEventListener("click", () => {
+      STATE.stops.splice(+btn.dataset.drop, 1); render();
+    });
+}
+
+function addStop(zone){
+  if (!STATE.stops.some(s => s.zone === zone)) STATE.stops.push({zone, on:true});
+  render();
+}
 
 function setZone(field, id){
   STATE[field] = id;
@@ -1142,6 +1355,20 @@ function combobox(field){
 combobox("from");
 combobox("to");
 ["dru","wiz","boats","kunark","velious"].forEach(id => $(id).addEventListener("change", render));
+$("addStop").addEventListener("click", () => addStop(STATE.to));
+$("clearStops").addEventListener("click", () => { STATE.stops = []; render(); });
+$("loop").addEventListener("change", render);
+
+/* A quest worth the feature: ten coins in ten cities, in any order,
+   then a fixed chain of turn-ins. eqlwiki.com/Coin_of_Tash_(Tashania) */
+$("questTash").addEventListener("click", () => {
+  setZone("from", "soltemple");
+  STATE.stops = ["akanon","erudin_palace","felwithe","wfreeport","grobb","halas",
+                 "kaladimb","neriakb","oggok","qeynos_n"].map(zone => ({zone, on:true}));
+  $("loop").checked = true;
+  render();
+});
+
 $("swap").addEventListener("click", () => {
   const a = STATE.from; STATE.from = STATE.to; STATE.to = a;
   $("fromInput").value = name(STATE.from); $("toInput").value = name(STATE.to);

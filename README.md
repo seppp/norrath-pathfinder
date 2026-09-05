@@ -19,6 +19,10 @@ switched on or off, drawn on a schematic world map and on each zone's real map.
   so it is modelled as a one-way edge from *any* zone to any ring or spire destination —
   which is why enabling ports usually removes the walking before the port, not after it.
 - Dijkstra over the zone graph — see [How routing works](#how-routing-works).
+- **Several stops at once**, each toggleable, visited in whatever order is shortest. Exact up
+  to twelve stops (Held-Karp over subsets), nearest-neighbour plus 2-opt beyond, with an
+  optional return to the start for a turn-in. Loading the Coin of Tash quest fills in its ten
+  coin cities: 120 zone lines in the order the guides list them, 66 in the best order on foot.
 - **World map** with the route drawn across it — straight strokes for zone lines, dashes for
   boats, curved arcs for ports. Click a zone to set the destination, shift-click for the start.
 - **Itinerary** collapsing consecutive walks into one line, with the port destination and the
