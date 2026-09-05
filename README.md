@@ -7,12 +7,12 @@ switched on or off, drawn on a schematic world map and on each zone's real map.
 
 ## What it does
 
-- Type-to-search pickers for the start and destination zone (117 zones — outdoor zones, city
+- Type-to-search pickers for the start and destination zone (118 zones — outdoor zones, city
   districts and the dungeons hanging off them).
 - **Expansion toggles.** Classic is always on; Ruins of Kunark and Scars of Velious can each be
   switched off, which removes those zones from the map, the pickers and the search — a server
-  running classic only cannot route through Kunark. Defaults to classic alone (74 zones);
-  all three gives 117. A zone's expansion follows its continent, since everything on Kunark
+  running classic only cannot route through Kunark. Defaults to classic alone (75 zones);
+  all three gives 118. A zone's expansion follows its continent, since everything on Kunark
   and Velious arrived with its own expansion. Selecting a zone and then switching its
   expansion off moves the selection to one that still exists.
 - Toggles for **druid ports**, **wizard ports** and **boats**. A port is cast where you stand,
@@ -106,7 +106,9 @@ differ. Druids get Rings (self) and Circles (group) to eleven zones plus Succor:
 wizards get Gates (self) and Portals (group) to nine zones, plus Evacuate: South Ro and the
 two Alter Plane rituals. The Planes of Hate and Sky have no zone lines at all: a wizard ritual
 is the only way in and Gate the only way out, so with wizard ports off they are unreachable —
-which the search reports rather than inventing a walk. The page
+which the search reports rather than inventing a walk. The Plane of Fear is reached on foot,
+through the portal in the Feerrott, modelled as an edge of type `portal`: one-way, since you
+cannot walk back out. `["feerrott","fear","portal"]` in `EDGES` is the whole of it. The page
 names the group version, since it is the one you ask a porter for. Kunark and Velious have no
 rituals in Legends, so those destinations keep live EQ names and only appear when you switch
 those expansions on.
