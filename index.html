@@ -1547,6 +1547,25 @@ const QUESTS = {
       {zone:"ecommons",   label:"Bubar again",    note:"both keys and the case for the Gem of Righteousness"},
       {zone:"sro",        label:"Ortallius",      note:"the orc right of the entrance — both gems for the Burning Rapier"}
     ]
+  },
+
+  avenger: {
+    name: "The Fiery Avenger (Paladin)",
+    start: "everfrost",
+    /* The epics themselves are out of era on Legends; this is the classic
+       quest that later feeds the Paladin's Fiery Defender. Bring Ghoulbane
+       and SoulFire — both quests of their own — before the last step. */
+    free: [
+      {zone:"soldungb",  label:"Torn, burnt book",        note:"from Lord Nagafen — or Talendor or Severilous once Kunark opens"},
+      {zone:"permafrost",label:"Torn, frost covered book",note:"from Vox — or Gorenaire or Faydedar once Kunark opens"}
+    ],
+    chain: [
+      {zone:"neriakb",  label:"Rysva To`Biath", loc:[11,-848], note:"the bartender downstairs — both books and 1000pp for the Book of Scale (Rineval Talyas serves the same purpose)"},
+      {zone:"ocean",    label:"Oracle of K`Arnon", note:"hand over the Book of Scale for Miragul's Phylactery — you need indifferent faction"},
+      {zone:"everfrost",label:"Lich of Miragul", note:"the phylactery spawns Miragul in the caves — his head and robe drop only for whoever turned it in"},
+      {zone:"kerra",    label:"Deepwater Knights", note:"optional: clear the island in the far south, +5 faction a kill, until warmly"},
+      {zone:"sky",      label:"Inte Akera",  note:"Island 4 — SoulFire alone, Ghoulbane alone, then head, robe and both blessings together"}
+    ]
   }
 };
 
