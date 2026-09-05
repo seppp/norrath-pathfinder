@@ -43,6 +43,15 @@ FILES = {
  "gdivide":["greatdivide"], "thurgadin":["thurgadina"], "kael":["kael"],
  "wakening":["wakening"], "wwastes":["westwastes"], "skyshrine":["skyshrine"],
  "cobalt":["cobaltscar"], "siren":["sirens"],
+ # city interiors, dungeons and outposts
+ "qcat":["qcat"], "oggok":["oggok"], "gukbottom":["gukbottom"], "paw":["paw"],
+ "soldungb":["soldungb"], "soltemple":["soltemple"], "neriakb":["neriakb"],
+ "neriakc":["neriakc"], "kaladimb":["kaladimb"], "felwitheb":["felwitheb"],
+ "kedge":["kedge"], "hole":["hole"], "warrens":["warrens"], "cabwest":["cabwest"],
+ "kaesora":["kaesora"], "dalnir":["dalnir"], "nurga":["nurga"], "droga":["droga"],
+ "citymist":["citymist"], "charasis":["charasis"], "veeshan":["veeshan"],
+ "crystal":["crystal"], "velketor":["velketor"], "templeveeshan":["templeveeshan"],
+ "necropolis":["necropolis"], "sleeper":["sleeper"], "icewell":["thurgadinb"],
 }
 
 # zone id -> the display name, for matching "to_..." labels
@@ -76,6 +85,17 @@ NAMES = {
  "gdivide":"Great Divide","thurgadin":"Thurgadin","kael":"Kael Drakkel",
  "wakening":"The Wakening Land","wwastes":"Western Wastes","skyshrine":"Skyshrine",
  "cobalt":"Cobalt Scar","siren":"Siren's Grotto",
+ "qcat":"Qeynos Catacombs","oggok":"Oggok","gukbottom":"Lower Guk",
+ "paw":"Lair of the Splitpaw","soldungb":"Nagafen's Lair",
+ "soltemple":"Temple of Solusek Ro","neriakb":"Neriak Commons",
+ "neriakc":"Neriak Third Gate","kaladimb":"South Kaladim",
+ "felwitheb":"Southern Felwithe","kedge":"Kedge Keep","hole":"The Hole",
+ "warrens":"The Warrens","cabwest":"Cabilis West","kaesora":"Kaesora",
+ "dalnir":"Crypt of Dalnir","nurga":"Mines of Nurga","droga":"Temple of Droga",
+ "citymist":"City of Mist","charasis":"Howling Stones","veeshan":"Veeshan's Peak",
+ "crystal":"Crystal Caverns","velketor":"Velketor's Labyrinth",
+ "templeveeshan":"Temple of Veeshan","necropolis":"Dragon Necropolis",
+ "sleeper":"Sleeper's Tomb","icewell":"Icewell Keep",
 }
 
 # extra spellings the map labels use
@@ -157,6 +177,40 @@ ALIASES = {
  "siren":["sirens grotto","siren s grotto","siren's grotto"],
  "paineel":["paineel"], "blackburrow":["blackburrow"],
  "rivervale":["rivervale"], "grobb":["grobb"],
+ # spellings, typos and old/new names the map labels use
+ "mistmoore":["castle mistmoore","the castle of mistmoore","castle of mistmoore"],
+ "runnyeye":["runnyeye citadel","liberated citadel of runnyeye","runnyeye"],
+ "toxxulia":["toxxulia forest","toxullia forest","toxxulia","tox forest"],
+ "nektulos":["nektulos forest","nektulos forrest"],
+ "gorge":["gorge of king xorbb","valley of king xorbb","beholder"],
+ "guk":["the city of guk","city of guk","upper guk","guk"],
+ "gukbottom":["ruins of old guk","lower guk","old guk"],
+ "qcat":["qeynos aqueduct system","qeynos aquaduct system","qeynos catacombs","aqueducts"],
+ "oggok":["oggok","city of oggok"],
+ "paw":["lair of the splitpaw","splitpaw","the lair of the splitpaw"],
+ "soldungb":["nagafen s lair","nagafens lair","lavastorm caverns"],
+ "soltemple":["temple of solusek ro","solusek ro temple"],
+ "neriakb":["neriak commons","neriak the commons"],
+ "neriakc":["neriak third gate","neriak 3rd gate","third gate"],
+ "kaladimb":["south kaladim","kaladim south"],
+ "felwitheb":["southern felwithe","south felwithe"],
+ "kedge":["kedge keep","the kedge keep"],
+ "hole":["ruins of old paineel","the hole","hole"],
+ "warrens":["the warrens","warrens"],
+ "cabwest":["cabilis west","cablis west","west cabilis"],
+ "kaesora":["kaesora","old kaesora"],
+ "dalnir":["crypt of dalnir","the crypt of dalnir","dalnir"],
+ "nurga":["mines of nurga","the mines of nurga","nurga"],
+ "droga":["temple of droga","the temple of droga","droga"],
+ "citymist":["city of mist","the city of mist"],
+ "charasis":["howling stones","the howling stones","charasis"],
+ "veeshan":["veeshan s peak","veeshans peak"],
+ "crystal":["crystal caverns","the crystal caverns"],
+ "velketor":["velketor s labyrinth","velketors labyrinth","velketor"],
+ "templeveeshan":["temple of veeshan","the temple of veeshan"],
+ "necropolis":["dragon necropolis","the dragon necropolis"],
+ "sleeper":["sleeper s tomb","the sleeper s tomb","sleepers tomb"],
+ "icewell":["icewell keep","the icewell keep"],
 }
 
 def norm(s):
@@ -238,7 +292,7 @@ def build(zid, base):
     for x, y, lbl in pts:
         if lbl.lower().startswith("to_"):
             target = resolve(lbl)
-            if target and target not in links: links[target] = [tx(x), ty(y)]
+            if target and target != zid and target not in links: links[target] = [tx(x), ty(y)]
             elif not target: unresolved.append(lbl)
         elif PORT_RE.search(lbl) and not ports:
             ports = [tx(x), ty(y)]

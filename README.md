@@ -7,7 +7,8 @@ switched on or off, drawn on a schematic world map and on each zone's real map.
 
 ## What it does
 
-- Type-to-search pickers for the start and destination zone (87 zones, classic through Velious).
+- Type-to-search pickers for the start and destination zone (114 zones, classic through Velious —
+  outdoor zones, city districts and the dungeons hanging off them).
 - Toggles for **druid ports**, **wizard ports** and **boats**. A port is cast where you stand,
   so it is modelled as a one-way edge from *any* zone to any ring or spire destination —
   which is why enabling ports usually removes the walking before the port, not after it.
