@@ -58,7 +58,15 @@
   h1{font-family:Cinzel,Georgia,serif;font-weight:700;font-size:clamp(26px,4.2vw,38px);
      letter-spacing:.02em;margin:0;text-wrap:balance}
   .tagline{color:var(--ink-soft);font-size:15px;font-style:italic;margin:0}
-  .theme-btn{margin-left:auto;background:none;border:1px solid var(--rule);color:var(--ink-soft);
+  .quest-pick{margin-left:auto;appearance:none;background:var(--surface);color:var(--ink-soft);
+    border:1px solid var(--rule);border-radius:2px;cursor:pointer;
+    font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+    padding:6px 26px 6px 10px;
+    background-image:linear-gradient(45deg,transparent 50%,var(--ink-faint) 50%),linear-gradient(135deg,var(--ink-faint) 50%,transparent 50%);
+    background-position:calc(100% - 14px) 13px,calc(100% - 9px) 13px;background-size:5px 5px;background-repeat:no-repeat}
+  .quest-pick:hover{color:var(--ink);border-color:var(--ink-faint)}
+  .quest-pick:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  .theme-btn{background:none;border:1px solid var(--rule);color:var(--ink-soft);
     font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
     padding:6px 10px;border-radius:2px;cursor:pointer}
   .theme-btn:hover{color:var(--ink);border-color:var(--ink-faint)}
@@ -128,8 +136,6 @@
   .stoprow .drop:hover{color:var(--portal)}
   .toggle.loop{padding-top:6px;border-top:1px dashed var(--rule);margin-top:2px}
   .quest-hint{border:0;padding-top:0;font-size:12.5px}
-  .preset{display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:1px solid var(--rule)}
-  .preset .linkish{margin-left:0;text-align:left;color:var(--ink-soft)}
 
   .seg.stop{padding:8px 12px;border-radius:2px;background:var(--surface-2);border-left-color:var(--gold)}
   .seg.stop .kind{color:var(--gold)}
@@ -289,6 +295,9 @@
   <header class="masthead">
     <h1>Norrath Pathfinder</h1>
     <p class="tagline">Fewest zone lines between any two zones &mdash; with or without ports.</p>
+    <select class="quest-pick" id="questPick" aria-label="Load a quest">
+      <option value="">Load a quest…</option>
+    </select>
     <button class="theme-btn" id="themeBtn" type="button">Light / Dark</button>
   </header>
 
@@ -333,10 +342,6 @@
           <p class="hint quest-hint">Stops are visited in whatever order is shortest. Lock one with &#128274; and it keeps its place in the list &mdash; for a quest that wants its turn-ins in sequence.</p>
         </div>
 
-        <div class="preset">
-          <span class="eyebrow">Try a quest</span>
-          <button class="linkish" id="questTash" type="button">Coin of Tash &mdash; 10 coins</button>
-        </div>
 
         <div class="toggles">
           <span class="eyebrow" style="padding-top:12px">Expansions <span id="zoneCount"></span></span>
@@ -1450,27 +1455,46 @@ $("loop").addEventListener("change", render);
 
 /* A quest worth the feature: ten coins in ten cities, in any order,
    then a fixed chain of turn-ins. eqlwiki.com/Coin_of_Tash_(Tashania) */
-$("questTash").addEventListener("click", () => {
-  setZone("from", "soltemple");
-  /* The ten coins, with the /loc the wiki gives for each. */
-  STATE.stops = [
-    {zone:"akanon",        label:"Azia", loc:[1990,-260], note:"west side of the great wheel, then north — not in the water"},
-    {zone:"erudin_palace", label:"Beza", loc:[703,740],   note:"one level up from the zone-in, on the rocks in the fountain"},
-    {zone:"felwithe",      label:"Caza", loc:[-110,-790], note:"in the fishing pond"},
-    {zone:"wfreeport",     label:"Dena", loc:[129,-750],  note:"in the pool under the Academy of Arcane Science"},
-    {zone:"grobb",         label:"Ena",  loc:[197,-261],  note:"across the first bridge, the small pool on the right"},
-    {zone:"halas",         label:"Fana", loc:[-138,179],  note:"in the lake, left near the far dock, on a raised ledge underwater"},
-    {zone:"kaladimb",      label:"Geza", loc:[75,360],    note:"the pool by the warrior's guild"},
-    {zone:"neriakb",       label:"Heda", loc:[0,-795],    note:"off the big bridge to the left, in the water by the glass windows"},
-    {zone:"oggok",         label:"Izah", loc:[103,108],   note:"in the lake by the warrior guild, north end"},
-    {zone:"qeynos_n",      label:"Jaka", loc:[-90,-445],  note:"under the Temple of Life, in the Koalindl Fish Pool"}
-  ].map(c => Object.assign({on:true, seq:false}, c)).concat([
-    /* Then the coin is enchanted three times, in this order, and handed back. */
-    {zone:"highkeep", label:"Tarn Visilin",  loc:[75,-220],    note:"in the library — hand over the Coin of Tash"},
-    {zone:"neriakc",  label:"Mizr N`Mar",    loc:[915,-1315],  note:"in the Third Gate library — the second enchantment"},
-    {zone:"erudin",   label:"Raine Beteria", loc:[-1050,-212], note:"in the library — the final enchantment"},
-    {zone:"soltemple",label:"Romar Sunto",   loc:[393,90],     note:"hand it back for Spell: Tashania"}
-  ].map(c => Object.assign({on:true, seq:true}, c)));
+/* Quests worth the trouble: several zones, in no particular order,
+   often ending in a chain of turn-ins that cannot be reordered.
+   Locations are the /loc each wiki page gives. */
+const QUESTS = {
+  tash: {
+    name: "Coin of Tash (Tashania)",
+    start: "soltemple",
+    free: [
+      {zone:"akanon",        label:"Azia", loc:[1990,-260], note:"west side of the great wheel, then north — not in the water"},
+      {zone:"erudin_palace", label:"Beza", loc:[703,740],   note:"one level up from the zone-in, on the rocks in the fountain"},
+      {zone:"felwithe",      label:"Caza", loc:[-110,-790], note:"in the fishing pond"},
+      {zone:"wfreeport",     label:"Dena", loc:[129,-750],  note:"in the pool under the Academy of Arcane Science"},
+      {zone:"grobb",         label:"Ena",  loc:[197,-261],  note:"across the first bridge, the small pool on the right"},
+      {zone:"halas",         label:"Fana", loc:[-138,179],  note:"in the lake, left near the far dock, on a raised ledge underwater"},
+      {zone:"kaladimb",      label:"Geza", loc:[75,360],    note:"the pool by the warrior's guild"},
+      {zone:"neriakb",       label:"Heda", loc:[0,-795],    note:"off the big bridge to the left, in the water by the glass windows"},
+      {zone:"oggok",         label:"Izah", loc:[103,108],   note:"in the lake by the warrior guild, north end"},
+      {zone:"qeynos_n",      label:"Jaka", loc:[-90,-445],  note:"under the Temple of Life, in the Koalindl Fish Pool"}
+    ],
+    chain: [
+      {zone:"highkeep",  label:"Tarn Visilin",  loc:[75,-220],    note:"in the library — hand over the Coin of Tash"},
+      {zone:"neriakc",   label:"Mizr N`Mar",    loc:[915,-1315],  note:"in the Third Gate library — the second enchantment"},
+      {zone:"erudin",    label:"Raine Beteria", loc:[-1050,-212], note:"in the library — the final enchantment"},
+      {zone:"soltemple", label:"Romar Sunto",   loc:[393,90],     note:"hand it back for Spell: Tashania"}
+    ]
+  }
+};
+
+for (const id in QUESTS){
+  const opt = document.createElement("option");
+  opt.value = id; opt.textContent = QUESTS[id].name;
+  $("questPick").appendChild(opt);
+}
+
+$("questPick").addEventListener("change", ev => {
+  const q = QUESTS[ev.target.value];
+  if (!q) return;
+  setZone("from", q.start);
+  STATE.stops = q.free.map(c => Object.assign({on:true, seq:false}, c))
+             .concat(q.chain.map(c => Object.assign({on:true, seq:true}, c)));
   $("loop").checked = false;
   render();
 });

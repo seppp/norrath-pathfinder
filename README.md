@@ -23,8 +23,9 @@ switched on or off, drawn on a schematic world map and on each zone's real map.
   to twelve stops (Held-Karp over subsets), nearest-neighbour plus 2-opt beyond, with an
   optional return to the start. A stop can be **locked** into its position instead, so a quest's
   turn-in chain runs in sequence while everything else reorders around it — the free stops are
-  solved to finish wherever is cheapest for starting the chain. Loading the Coin of Tash quest fills in its ten
-  coin cities: 120 zone lines in the order the guides list them, 66 in the best order on foot.
+  solved to finish wherever is cheapest for starting the chain. Picking a quest from the selector beside the theme toggle fills in its stops:
+  the Coin of Tash gives ten coin cities plus a locked four-step turn-in chain, and its ten
+  coins alone are 120 zone lines in the order the guides list them, 66 in the best order on foot.
   A stop can carry a `/loc` and a hint, drawn as a marker on that zone's own map — wiki `/loc`
   is `(Y, X)` and the map files hold its negation, verified against two quest NPCs (Mizr N'Mar,
   Romar Sunto) that appear in both coordinate systems.
