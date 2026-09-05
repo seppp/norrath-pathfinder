@@ -303,7 +303,9 @@ def build(zid, base):
         elif PORT_RE.search(lbl) and not ports:
             ports = [tx(x), ty(y)]
 
-    zone = {"seg": flat, "links": links}
+    # keep the transform so the page can place a /loc inside the zone later
+    zone = {"seg": flat, "links": links,
+            "t": [round(scale, 6), round(ox, 2), round(oy, 2)]}
     if ports: zone["port"] = ports
     return zone, unresolved
 

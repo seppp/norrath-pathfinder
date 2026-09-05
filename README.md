@@ -23,6 +23,9 @@ switched on or off, drawn on a schematic world map and on each zone's real map.
   to twelve stops (Held-Karp over subsets), nearest-neighbour plus 2-opt beyond, with an
   optional return to the start for a turn-in. Loading the Coin of Tash quest fills in its ten
   coin cities: 120 zone lines in the order the guides list them, 66 in the best order on foot.
+  A stop can carry a `/loc` and a hint, drawn as a marker on that zone's own map — wiki `/loc`
+  is `(Y, X)` and the map files hold its negation, verified against two quest NPCs (Mizr N'Mar,
+  Romar Sunto) that appear in both coordinate systems.
 - **World map** with the route drawn across it — straight strokes for zone lines, dashes for
   boats, curved arcs for ports. Click a zone to set the destination, shift-click for the start.
 - **Itinerary** collapsing consecutive walks into one line, with the port destination and the
