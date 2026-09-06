@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://seppp.github.io/norrath-pathfinder/sitemap.xml
