@@ -134,12 +134,14 @@ Static, single file. GitHub Pages: Settings → Pages → Source `main` / root.
 
 ## Privacy
 
-The page makes **no third-party requests**. Cinzel, Alegreya Sans and JetBrains Mono
+The page makes **no third-party request until a visitor allows one**. Cinzel, Alegreya Sans and JetBrains Mono
 (SIL Open Font License 1.1, latin subsets) are embedded as base64 WOFF2 rather than
 hotlinked from Google Fonts, which is what a German court found to breach GDPR in
 LG München I, 3 O 17493/20 — the fonts are freely licensed, but the hotlink hands the
-visitor's IP address to a third party. There are no cookies, no analytics, no storage,
-and no user input leaves the browser. The host's own server logs (GitHub's, here) still
+visitor's IP address to a third party. Google Analytics (G-ZC5S0E0RRP) is held behind a
+consent bar: `gtag.js` is not fetched and no `_ga` cookie is set unless the visitor clicks
+Allow, and the answer is kept in that browser's `localStorage` alone. Nothing a visitor types
+or selects leaves their machine — the routing is entirely client-side. The host's own server logs (GitHub's, here) still
 record visitor IPs, as every web server does.
 
 ## Data provenance

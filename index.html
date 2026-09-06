@@ -7,6 +7,36 @@
 <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
+
+<script>
+/* Google Analytics, held behind a choice. Nothing is requested from Google
+   and no cookie is set until a visitor accepts, so the page keeps its word
+   for everyone who does not. The answer lives in this browser only. */
+(function(){
+  var KEY = "np-analytics", choice = null;
+  try { choice = localStorage.getItem(KEY); } catch (e) {}
+
+  window.npAnalytics = function(answer){
+    try { localStorage.setItem(KEY, answer); } catch (e) {}
+    var bar = document.getElementById("consent");
+    if (bar) bar.hidden = true;
+    if (answer !== "yes" || window.npLoaded) return;
+    window.npLoaded = true;
+    var s = document.createElement("script");
+    s.async = true;
+    s.src = "https://www.googletagmanager.com/gtag/js?id=G-ZC5S0E0RRP";
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    window.gtag = gtag;
+    gtag("js", new Date());
+    gtag("config", "G-ZC5S0E0RRP");
+  };
+
+  window.npChoice = choice;
+  if (choice === "yes") window.npAnalytics("yes");
+})();
+</script>
 <link rel="canonical" href="https://seppp.github.io/norrath-pathfinder/">
 
 <meta property="og:type" content="website">
@@ -313,6 +343,17 @@
     font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);opacity:0}
   .zcard:hover .zhint{opacity:1}
 
+  .consent{position:fixed;z-index:90;left:20px;bottom:20px;width:min(330px,calc(100vw - 40px));
+    padding:14px 16px;background:var(--surface);border:1px solid var(--rule);border-radius:3px;
+    box-shadow:0 18px 40px -22px rgba(0,0,0,.5)}
+  .consent p{margin:0 0 10px;font-size:13.5px;line-height:1.4;color:var(--ink-soft)}
+  .consent-btns{display:flex;gap:8px}
+  .consent button{flex:1;padding:7px 10px;border-radius:2px;cursor:pointer;
+    font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+    background:var(--gold);color:var(--surface);border:1px solid var(--gold)}
+  .consent button.ghost{background:none;color:var(--ink-soft);border-color:var(--rule)}
+  .consent button.ghost:hover{color:var(--ink);border-color:var(--ink-faint)}
+
   .zoom{position:fixed;z-index:80;width:min(520px,92vw);padding:14px;background:var(--surface);
     border:1px solid var(--rule);border-radius:3px;
     box-shadow:0 24px 60px -20px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.12)}
@@ -476,6 +517,14 @@
     </div>
   </div>
 
+  <div class="consent" id="consent" hidden>
+    <p>May this page count your visit with Google Analytics? Nothing is loaded from Google, and no cookie is set, unless you say yes.</p>
+    <div class="consent-btns">
+      <button type="button" onclick="npAnalytics('yes')">Allow</button>
+      <button type="button" class="ghost" onclick="npAnalytics('no')">No thanks</button>
+    </div>
+  </div>
+
   <div class="zoom" id="zoom" hidden>
     <div class="zoom-head">
       <span class="zname" id="zoomTitle"></span>
@@ -504,7 +553,7 @@
     </div>
     <div>
       <span class="eyebrow">Privacy</span>
-      <p>This page loads nothing from anyone: the fonts are embedded, there are no analytics, no cookies, no tracking and no storage. Nothing you select here leaves your browser. The only party that sees a request is whoever hosts the page, whose server logs record visitor IP addresses as all web servers do.</p>
+      <p>The fonts are embedded rather than fetched, and nothing you select here ever leaves your browser &mdash; the routing runs entirely on your machine. The one exception is Google Analytics, and only if you allow it: until then nothing is requested from Google and no cookie is set, and your answer is kept in this browser alone. Whoever hosts the page still sees the request in their server logs, as every web server does.</p>
     </div>
     <div>
       <span class="eyebrow">Map credit</span>
@@ -1648,4 +1697,6 @@ $("themeBtn").addEventListener("click", () => {
   document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
 });
 render();
+
+if (window.npChoice !== "yes" && window.npChoice !== "no") $("consent").hidden = false;
 </script>
