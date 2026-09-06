@@ -70,6 +70,12 @@
     font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
     padding:6px 10px;border-radius:2px;cursor:pointer}
   .theme-btn:hover{color:var(--ink);border-color:var(--ink-faint)}
+  .coffee{display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+    border:1px solid var(--gold);border-radius:2px;color:var(--gold);background:none;
+    font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.09em;
+    text-transform:uppercase;padding:6px 10px;white-space:nowrap}
+  .coffee:hover{background:var(--gold);color:var(--surface)}
+  .coffee:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
   .layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;margin-top:22px;align-items:start}
   @media (max-width:900px){.layout{grid-template-columns:1fr}}
@@ -304,6 +310,8 @@
       <option value="">Load a quest…</option>
     </select>
     <button class="theme-btn" id="themeBtn" type="button">Light / Dark</button>
+    <a class="coffee" href="https://buymeacoffee.com/seppp" target="_blank" rel="noopener noreferrer">
+      &#9749; Buy me a coffee</a>
   </header>
 
   <div class="layout">
