@@ -807,6 +807,17 @@ const eraOn = z => { const e = eraOf(z); return e === "classic" || $(e).checked;
 
 const COST = {walk:1, boat:2, druid:1, wizard:1, portal:1};
 
+/* What you actually do at a portal, and where the thing stands. Fear's
+   is a portal you step into and the map file marks it; the other two are
+   objects you click, and only Sky's has a published /loc. */
+const PORTALS = {
+  "feerrott>fear": {verb:"step", what:"the portal"},
+  "oasis>hate":    {verb:"click", what:"the giant sword atop the tower on the spectre island",
+                    where:"map marker 4, the temple ringed with spectres"},
+  "efreeport>sky": {verb:"click", what:"the orb on the rock in the bay", loc:[-425,-1200]}
+};
+const portalOf = leg => leg && leg.type === "portal" ? PORTALS[leg.from + ">" + leg.to] : null;
+
 const $ = id => document.getElementById(id);
 const name = z => ZONES[z][0];
 const region = z => ZONES[z][1];
@@ -1087,9 +1098,15 @@ function segHTML(seg, final){
     return '<li class="seg boat' + end + '"><div class="kind">Boat</div>' +
            '<div class="zone last">Sail to ' + name(seg.to) + '</div></li>';
 
-  if (seg.kind === "portal")
+  if (seg.kind === "portal"){
+    const p = PORTALS[seg.from + ">" + seg.to] || {verb:"step", what:"the portal"};
+    const line = p.verb === "click"
+      ? "Click " + p.what + " for " + name(seg.to)
+      : "Step through " + p.what + " into " + name(seg.to);
     return '<li class="seg portal' + end + '"><div class="kind">Portal &middot; one way</div>' +
-           '<div class="zone last">Step through into ' + name(seg.to) + '</div></li>';
+           '<div class="zone last">' + line + '</div>' +
+           (p.where ? '<div class="stopnote">' + p.where + '</div>' : "") + '</li>';
+  }
 
   return '<li class="seg port ' + seg.kind + end + '">' +
          '<div class="kind">' + (seg.kind === "druid" ? "Druid port" : "Wizard port") +
@@ -1173,8 +1190,12 @@ function zoneArt(zone, inLeg, outLeg, big){
     return p ? {x:p[0], y:p[1], guess:false} : {x:MC, y:MC, guess:true};
   };
 
+  const outPortal = portalOf(outLeg);
   const enter = isPortIn ? centre() : link(inLeg.from);
-  const exit  = !outLeg ? null : isPortOut ? centre() : link(outLeg.to);
+  const exit  = !outLeg ? null
+              : isPortOut ? centre()
+              : (outPortal && outPortal.loc && locToCard(zone, outPortal.loc[0], outPortal.loc[1]))
+                || link(outLeg.to);
 
   let art = m ? geoPath(m.seg)
               : '<rect class="frame" x="30" y="30" width="940" height="940" rx="40"></rect>';
@@ -1224,7 +1245,10 @@ function zoneArt(zone, inLeg, outLeg, big){
     : isPortOut ? '<span class="z">' + spellFor(outLeg.type, outLeg.to) + '</span> → ' + name(outLeg.to)
     : '<span class="z">' + name(outLeg.to) + '</span> · ' +
       (outLeg.type === "boat" ? "dock, " : "") +
-      (outLeg.type === "portal" ? "portal" : where(exit));
+      (outPortal ? (outPortal.verb === "click" ? "click " : "step through ") + outPortal.what +
+                   (outPortal.loc || (ZONEMAPS[zone] && ZONEMAPS[zone].links &&
+                    ZONEMAPS[zone].links[outLeg.to]) ? "" : " (position approximate)")
+                 : where(exit));
 
   const poiLine = poi
     ? '<span class="poinote"><b>Here</b><span class="z">' + poi.label + '</span> · ' + poi.note + '</span>'

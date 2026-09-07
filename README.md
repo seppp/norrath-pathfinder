@@ -119,7 +119,10 @@ wizards get Gates (self) and Portals (group) to nine zones, plus Evacuate: South
 two Alter Plane rituals. Each plane has a foot entrance as well as a ritual: the Feerrott portal for Fear, the black
 sword atop the tower in the Oasis of Marr for Hate, and East Freeport for Sky. All three are
 edges of type `portal` — one-way, since no plane has a conventional exit and leaving means
-Gate, Origin or a porter. `["feerrott","fear","portal"]` in `EDGES` is the whole of it. The page
+Gate, Origin or a porter. `PORTALS` says what you do at each: Fear's is stepped through and
+the map file marks it, while Hate's giant sword and Sky's orb are clicked. Sky's orb carries
+the `/loc` its wiki page gives (-425, -1200), so the card pins it; Hate's has no published
+coordinates, so that pin is marked approximate. `["feerrott","fear","portal"]` in `EDGES` is the whole of it. The page
 names the group version, since it is the one you ask a porter for. Kunark and Velious have no
 rituals in Legends, so those destinations keep live EQ names and only appear when you switch
 those expansions on.
