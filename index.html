@@ -545,7 +545,7 @@
     </div>
     <div>
       <span class="eyebrow">About the map</span>
-      <p>Expansions can be switched off &mdash; a server running classic only has no Kunark or Velious to route through, so those zones leave the map, the pickers and the search entirely. The planes sit apart because they are apart. Hate and Sky are reached only by a wizard ritual &mdash; Alter Plane: Hate needs a Fuligan Soulstone of Innoruuk, Alter Plane: Sky a Cloudy Stone of Veeshan &mdash; so with wizard ports off they cannot be reached at all. Fear is different: you walk to the portal in the Feerrott, which is why the route can reach it on foot, and why it is drawn as a dotted line rather than an arc. That line runs one way. Gate is how you leave any of them. The world map is schematic: continents sit in their rough relative positions and each dot is a zone. The zone cards are not &mdash; each is traced from that zone's own Brewall map file, and the pins sit on the real zone-line coordinates. Zones are drawn in the orientation the in-game map uses, so a card should match what you see on screen. A pin marked <em>approx.</em> is one the map file did not label, placed instead by bearing from the world map.</p>
+      <p>Expansions can be switched off &mdash; a server running classic only has no Kunark or Velious to route through, so those zones leave the map, the pickers and the search entirely. Each plane has a way in on foot as well as by ritual: the portal in the Feerrott for Fear, the black sword atop the tower in the Oasis of Marr for Hate, and East Freeport for Sky. Those are drawn as dotted lines, and every one of them runs strictly one way &mdash; no plane has a conventional exit, so leaving means Gate, Origin or a porter. A wizard's Alter Plane rituals reach Hate and Sky directly, at the cost of a Fuligan Soulstone of Innoruuk or a Cloudy Stone of Veeshan. The world map is schematic: continents sit in their rough relative positions and each dot is a zone. The zone cards are not &mdash; each is traced from that zone's own Brewall map file, and the pins sit on the real zone-line coordinates. Zones are drawn in the orientation the in-game map uses, so a card should match what you see on screen. A pin marked <em>approx.</em> is one the map file did not label, placed instead by bearing from the world map.</p>
     </div>
     <div>
       <span class="eyebrow">Hops, not minutes</span>
@@ -746,6 +746,8 @@ const EDGES = [
   ["butcherblock","timorous","boat"],["butcherblock","iceclad","boat"],
   ["fv","overthere","boat"],
   ["feerrott","fear","portal"],
+  ["oasis","hate","portal"],        // the black sword atop the tower
+  ["efreeport","sky","portal"],
   // city interiors, dungeons and outposts
   ["qeynos_s","qcat"],["qeynos_n","qcat"],["skarana","paw"],["guk","gukbottom"],
   ["feerrott","oggok"],["soleye","soldungb"],["lavastorm","soltemple"],

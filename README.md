@@ -116,11 +116,10 @@ Port destinations and spell names come from the Legends ritual table
 ([eqlwiki.com/Rituals](https://eqlwiki.com/Rituals), as of 2026-06-20), not live EQ — they
 differ. Druids get Rings (self) and Circles (group) to eleven zones plus Succor: East Karana;
 wizards get Gates (self) and Portals (group) to nine zones, plus Evacuate: South Ro and the
-two Alter Plane rituals. The Planes of Hate and Sky have no zone lines at all: a wizard ritual
-is the only way in and Gate the only way out, so with wizard ports off they are unreachable —
-which the search reports rather than inventing a walk. The Plane of Fear is reached on foot,
-through the portal in the Feerrott, modelled as an edge of type `portal`: one-way, since you
-cannot walk back out. `["feerrott","fear","portal"]` in `EDGES` is the whole of it. The page
+two Alter Plane rituals. Each plane has a foot entrance as well as a ritual: the Feerrott portal for Fear, the black
+sword atop the tower in the Oasis of Marr for Hate, and East Freeport for Sky. All three are
+edges of type `portal` — one-way, since no plane has a conventional exit and leaving means
+Gate, Origin or a porter. `["feerrott","fear","portal"]` in `EDGES` is the whole of it. The page
 names the group version, since it is the one you ask a porter for. Kunark and Velious have no
 rituals in Legends, so those destinations keep live EQ names and only appear when you switch
 those expansions on.
