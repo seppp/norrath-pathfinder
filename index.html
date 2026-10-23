@@ -1,7 +1,7 @@
 <title>Norrath Pathfinder — EverQuest travel and port routes</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Plan the shortest route between any two EverQuest zones. 118 zones of classic Norrath with druid rings, wizard spires, boats and zone lines, drawn on the game's own maps — plus multi-stop quest routing for EverQuest Legends.">
+<meta name="description" content="Plan the shortest route between any two EverQuest zones. 120 zones of classic Norrath with druid rings, wizard spires, boats and zone lines, drawn on the game's own maps — plus multi-stop quest routing for EverQuest Legends.">
 <meta name="theme-color" content="#EFEEE6">
 <link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
@@ -42,7 +42,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Norrath Pathfinder">
 <meta property="og:title" content="Norrath Pathfinder — EverQuest travel routes">
-<meta property="og:description" content="Plan the shortest route between any two EverQuest zones. 118 zones of classic Norrath with druid rings, wizard spires, boats and zone lines, drawn on the game's own maps — plus multi-stop quest routing for EverQuest Legends.">
+<meta property="og:description" content="Plan the shortest route between any two EverQuest zones. 120 zones of classic Norrath with druid rings, wizard spires, boats and zone lines, drawn on the game's own maps — plus multi-stop quest routing for EverQuest Legends.">
 <meta property="og:url" content="https://seppp.github.io/norrath-pathfinder/">
 <meta property="og:image" content="https://seppp.github.io/norrath-pathfinder/preview.png">
 <meta property="og:image:width" content="1200">
@@ -50,14 +50,14 @@
 <meta property="og:image:alt" content="A route drawn in gold across three landmasses of Norrath">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Norrath Pathfinder — EverQuest travel routes">
-<meta name="twitter:description" content="Plan the shortest route between any two EverQuest zones. 118 zones of classic Norrath with druid rings, wizard spires, boats and zone lines, drawn on the game's own maps — plus multi-stop quest routing for EverQuest Legends.">
+<meta name="twitter:description" content="Plan the shortest route between any two EverQuest zones. 120 zones of classic Norrath with druid rings, wizard spires, boats and zone lines, drawn on the game's own maps — plus multi-stop quest routing for EverQuest Legends.">
 <meta name="twitter:image" content="https://seppp.github.io/norrath-pathfinder/preview.png">
 
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebApplication","name":"Norrath Pathfinder",
 "url":"https://seppp.github.io/norrath-pathfinder/","applicationCategory":"GameApplication",
 "operatingSystem":"Any browser","browserRequirements":"Requires JavaScript",
-"description":"Plan the shortest route between any two EverQuest zones. 118 zones of classic Norrath with druid rings, wizard spires, boats and zone lines, drawn on the game's own maps — plus multi-stop quest routing for EverQuest Legends.",
+"description":"Plan the shortest route between any two EverQuest zones. 120 zones of classic Norrath with druid rings, wizard spires, boats and zone lines, drawn on the game's own maps — plus multi-stop quest routing for EverQuest Legends.",
 "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},
 "about":[{"@type":"VideoGame","name":"EverQuest"},{"@type":"VideoGame","name":"EverQuest Legends"}],
 "featureList":["Shortest route between any two zones","Druid ring and wizard spire ports",
@@ -615,6 +615,11 @@ const ZONES = {
   lavastorm:["Lavastorm Mountains","Antonica",795,532],
   najena:["Najena","Antonica",806,586],
   soleye:["Solusek's Eye","Antonica",760,600],
+  // Legends-only, added 2026-10-22: the lake is the approach, the castle a
+  // dungeon off it, as High Keep hangs off Highpass; the road runs north
+  // from the lake to the castle
+  lakenerius:["Lake Nerius","Antonica",742,560],
+  nektropos:["Nektropos Castle","Antonica",722,516],
   // ── Seas ──────────────────────────────────────────────────
   ocean:["Ocean of Tears","Seas",392,470],
   erudsxing:["Erud's Crossing","Seas",392,640],
@@ -728,6 +733,7 @@ const EDGES = [
   ["feerrott","cazic"],["feerrott","rathe"],["rathe","lakerathe"],
   ["wcommons","nektulos"],["nektulos","neriak"],["nektulos","lavastorm"],
   ["lavastorm","najena"],["lavastorm","soleye"],
+  ["nektulos","lakenerius"],["lakenerius","nektropos"],
   ["erudin","erudin_palace"],["erudin","toxxulia"],["toxxulia","paineel"],
   ["butcherblock","kaladim"],["butcherblock","cauldron"],["cauldron","unrest"],
   ["butcherblock","gfay"],["gfay","felwithe"],["gfay","crushbone"],["gfay","lfay"],
@@ -816,6 +822,12 @@ const PORTALS = {
                     where:"map marker 4, the temple ringed with spectres"},
   "efreeport>sky": {verb:"click", what:"the orb on the rock in the bay", loc:[-425,-1200]}
 };
+/* Zones whose door is shut until a quest is done. Routing ignores it, as it
+   ignores level and faction; the zone's card says so. */
+const ACCESS = {
+  nektropos: "the doors stay locked until Retainer Ozval's quest in Lake Nerius, Hate, Betrayal, and Trust, earns Be Our Guest"
+};
+
 const portalOf = leg => leg && leg.type === "portal" ? PORTALS[leg.from + ">" + leg.to] : null;
 
 const $ = id => document.getElementById(id);
@@ -1250,9 +1262,10 @@ function zoneArt(zone, inLeg, outLeg, big){
                     ZONEMAPS[zone].links[outLeg.to]) ? "" : " (position approximate)")
                  : where(exit));
 
-  const poiLine = poi
+  const poiLine = (poi
     ? '<span class="poinote"><b>Here</b><span class="z">' + poi.label + '</span> · ' + poi.note + '</span>'
-    : "";
+    : "") +
+    (ACCESS[zone] ? '<span class="poinote"><b>Key</b>' + ACCESS[zone] + '</span>' : "");
 
   return {art, inText, outText, poiLine, hasMap: !!m};
 }

@@ -7,12 +7,12 @@ switched on or off, drawn on a schematic world map and on each zone's real map.
 
 ## What it does
 
-- Type-to-search pickers for the start and destination zone (118 zones — outdoor zones, city
+- Type-to-search pickers for the start and destination zone (120 zones — outdoor zones, city
   districts and the dungeons hanging off them).
 - **Expansion toggles.** Classic is always on; Ruins of Kunark and Scars of Velious can each be
   switched off, which removes those zones from the map, the pickers and the search — a server
-  running classic only cannot route through Kunark. Defaults to classic alone (75 zones);
-  all three gives 118. A zone's expansion follows its continent, since everything on Kunark
+  running classic only cannot route through Kunark. Defaults to classic alone (77 zones);
+  all three gives 120. A zone's expansion follows its continent, since everything on Kunark
   and Velious arrived with its own expansion. Selecting a zone and then switching its
   expansion off moves the selection to one that still exists.
 - Toggles for **druid ports**, **wizard ports** and **boats**. A port is cast where you stand,
@@ -126,6 +126,13 @@ coordinates, so that pin is marked approximate. `["feerrott","fear","portal"]` i
 names the group version, since it is the one you ask a porter for. Kunark and Velious have no
 rituals in Legends, so those destinations keep live EQ names and only appear when you switch
 those expansions on.
+
+Two zones exist only in Legends, from the 2026-10-22 patch: **Lake Nerius**, off Nektulos
+Forest, and **Nektropos Castle**, a dungeon off the lake (connections per
+[eqlegendstools.com](https://eqlegendstools.com/zones/lake-nerius/); the client map pack has
+no geometry for either, so their cards draw a frame with approximate pins). The castle's doors
+stay locked until Retainer Ozval's quest *Hate, Betrayal, and Trust* earns *Be Our Guest*.
+Routing ignores that, as it ignores level and faction; `ACCESS` puts the note on the zone's card.
 
 The graph is a reconstruction of classic/Kunark/Velious connectivity; correct anything your
 server does differently and reload.
